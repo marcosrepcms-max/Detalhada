@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Programação Olympikus</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f5fb;
+      --surface: rgba(255,255,255,0.9);
+      --surface-solid: #ffffff;
+      --surface-2: #f8faff;
+      --text: #141b34;
+      --muted: #68718c;
+      --line: #dfe5f3;
+      --primary: #2f3fd6;
+      --primary-2: #4e5ef7;
+      --primary-soft: rgba(47, 63, 214, 0.1);
+      --ok: #0ea271;
+      --warn: #d97706;
+      --shadow: 0 16px 50px rgba(30, 46, 110, 0.12);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --header-h: 78px;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; font-family: Inter, system-ui, sans-serif; background: linear-gradient(180deg, #f8f9ff 0%, #eef2f9 100%); color: var(--text); }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      backdrop-filter: blur(16px);
+      background: rgba(247, 249, 255, 0.82);
+      border-bottom: 1px solid rgba(223, 229, 243, 0.88);
+    }
+
+    .topbar-inner {
+      max-width: 1680px;
+      margin: 0 auto;
+      min-height: var(--header-h);
+      padding: 14px 16px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: 1fr;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      color: white;
+      font-weight: 800;
+      box-shadow: 0 10px 24px rgba(47, 63, 214, 0.28);
+      flex: 0 0 auto;
+    }
+
+    .brand-copy { min-width: 0; }
+    .brand-copy h1 {
+      margin: 0;
+      font-size: clamp(1rem, 1.8vw, 1.45rem);
+      line-height: 1.05;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .brand-copy p {
+      margin: 3px 0 0;
+      font-size: 0.83rem;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .search-wrap {
+      position: relative;
+    }
+    .search-wrap input {
+      width: 100%;
+      height: 48px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.92);
+      border-radius: 16px;
+      padding: 0 16px 0 44px;
+      outline: none;
+      transition: .18s ease;
+      color: var(--text);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+    .search-wrap input:focus {
+      border-color: rgba(47,63,214,0.5);
+      box-shadow: 0 0 0 4px rgba(47,63,214,0.08);
+    }
+    .search-wrap .icon {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .btn {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.92);
+      color: var(--text);
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: 14px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: transform .12s ease, box-shadow .18s ease, border-color .18s ease;
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(33, 45, 95, 0.08); }
+    .btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 12px 30px rgba(47, 63, 214, 0.22);
+    }
+    .btn.soft {
+      background: var(--primary-soft);
+      color: var(--primary);
+      border-color: transparent;
+    }
+    .btn.small { min-height: 36px; border-radius: 12px; padding: 0 12px; font-size: 0.9rem; }
+
+    .content {
+      width: 100%;
+      max-width: 1680px;
+      margin: 0 auto;
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .kpi {
+      background: var(--surface);
+      border: 1px solid rgba(223, 229, 243, 0.95);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .kpi::after {
+      content: "";
+      position: absolute;
+      inset: auto -20px -20px auto;
+      width: 95px;
+      height: 95px;
+      background: radial-gradient(circle, rgba(47,63,214,0.10) 0%, rgba(47,63,214,0) 70%);
+      pointer-events: none;
+    }
+    .kpi-label {
+      color: var(--muted);
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+    .kpi-value {
+      font-size: clamp(1.12rem, 3.5vw, 1.8rem);
+      font-weight: 800;
+      line-height: 1.1;
+    }
+    .kpi-sub {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 0.86rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid rgba(223, 229, 243, 0.95);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-top {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: grid;
+      gap: 12px;
+    }
+
+    .panel-summary {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+    .summary-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+    }
+    .summary-text {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .chip-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .chip {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: #eef2ff;
+      border: 1px solid #d9e0ff;
+      color: #3042d0;
+      font-size: 0.82rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chip button {
+      border: 0;
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .table-shell {
+      overflow: auto;
+      -webkit-overflow-scrolling: touch;
+      max-height: calc(100vh - 340px);
+      min-height: 420px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.62) 0%, rgba(248,250,255,0.9) 100%);
+    }
+
+    table {
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 1180px;
+      width: 100%;
+    }
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      text-align: left;
+      background: rgba(248, 250, 255, 0.98);
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.77rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 12px 12px;
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 13px 12px;
+      border-bottom: 1px solid #edf1fa;
+      vertical-align: middle;
+      font-size: 0.92rem;
+      background: rgba(255,255,255,0.86);
+    }
+    tbody tr:hover td { background: rgba(247, 249, 255, 0.98); }
+    tbody tr:nth-child(even) td { background: rgba(252, 253, 255, 0.9); }
+
+    .col-name { font-weight: 700; }
+    .col-ref { font-weight: 700; color: var(--primary); }
+    .col-number { text-align: right; font-variant-numeric: tabular-nums; }
+    .col-date { white-space: nowrap; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      background: #f4f6ff;
+      color: #3344d7;
+      border: 1px solid #dce2ff;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .badge.empty {
+      color: #8f96ab;
+      background: #f4f5f8;
+      border-color: #e4e8f0;
+    }
+    .link-btn {
+      min-height: 34px;
+      border-radius: 10px;
+      border: 1px solid #dbe2f2;
+      background: white;
+      color: var(--primary);
+      padding: 0 12px;
+      font-weight: 700;
+    }
+
+    .pagination {
+      padding: 14px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.72);
+    }
+    .pagination-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .pagination .meta {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+    select.page-size {
+      min-height: 40px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      padding: 0 10px;
+      background: white;
+    }
+
+    .drawer-backdrop, .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(7, 12, 29, 0.45);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease;
+      z-index: 60;
+    }
+    .drawer-backdrop.show, .modal-backdrop.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(100%, 430px);
+      background: #f7f9ff;
+      box-shadow: -18px 0 45px rgba(18, 28, 66, 0.22);
+      transform: translateX(100%);
+      transition: transform .22s ease;
+      z-index: 70;
+      display: flex;
+      flex-direction: column;
+    }
+    .drawer.show { transform: translateX(0); }
+    .drawer-header {
+      padding: 18px 18px 14px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(10px);
+    }
+    .drawer-title {
+      font-size: 1rem;
+      font-weight: 800;
+      margin: 0;
+    }
+    .drawer-body {
+      flex: 1;
+      overflow: auto;
+      padding: 16px 16px 24px;
+      display: grid;
+      gap: 14px;
+    }
+    .drawer-footer {
+      padding: 14px 16px;
+      border-top: 1px solid var(--line);
+      background: rgba(255,255,255,0.88);
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+    .field label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .field input, .field select {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fff;
+      padding: 0 14px;
+      color: var(--text);
+      outline: none;
+    }
+    .field input:focus, .field select:focus {
+      border-color: rgba(47,63,214,0.5);
+      box-shadow: 0 0 0 4px rgba(47,63,214,0.08);
+    }
+
+    .toggle-grid {
+      display: grid;
+      gap: 10px;
+      grid-template-columns: 1fr;
+    }
+    .toggle-item {
+      background: rgba(255,255,255,0.92);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      min-height: 52px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .toggle-item span { font-weight: 600; }
+    .switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      background: #d8deee;
+      border-radius: 999px;
+      transition: .18s ease;
+      flex: 0 0 auto;
+    }
+    .switch::after {
+      content: "";
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      transition: .18s ease;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.16);
+    }
+    .toggle-item.active .switch {
+      background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    }
+    .toggle-item.active .switch::after {
+      left: 23px;
+    }
+
+    .modal {
+      position: fixed;
+      inset: auto 16px 16px 16px;
+      z-index: 80;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 24px 60px rgba(12, 22, 50, 0.26);
+      overflow: hidden;
+      transform: translateY(16px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .modal.show {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+    .modal-head {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-body {
+      padding: 16px;
+      display: grid;
+      gap: 16px;
+    }
+    .image-box {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #fbfcff 0%, #f2f5fc 100%);
+      min-height: 240px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .image-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      aspect-ratio: 1 / 1;
+    }
+    .modal-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0,1fr));
+      gap: 10px;
+    }
+    .meta-card {
+      border: 1px solid var(--line);
+      background: #f8faff;
+      border-radius: 14px;
+      padding: 12px;
+    }
+    .meta-card .label {
+      color: var(--muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      font-weight: 700;
+    }
+    .meta-card .value {
+      margin-top: 6px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      word-break: break-word;
+    }
+
+    .empty-state, .loading-state {
+      padding: 42px 16px;
+      text-align: center;
+      color: var(--muted);
+    }
+    .empty-state strong, .loading-state strong { display: block; color: var(--text); margin-bottom: 6px; }
+
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.82rem;
+      padding: 0 4px;
+    }
+
+    @media (min-width: 880px) {
+      .topbar-inner {
+        grid-template-columns: minmax(280px, 420px) 1fr;
+        gap: 16px;
+      }
+      .toolbar {
+        grid-template-columns: minmax(260px, 1fr) auto;
+        align-items: center;
+      }
+      .action-row { justify-content: flex-end; }
+      .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .modal {
+        left: 50%;
+        top: 50%;
+        right: auto;
+        bottom: auto;
+        width: min(900px, calc(100vw - 32px));
+        transform: translate(-50%, -46%);
+      }
+      .modal.show { transform: translate(-50%, -50%); }
+      .modal-body {
+        grid-template-columns: minmax(300px, 360px) 1fr;
+        align-items: start;
+      }
+      .toggle-grid { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-badge">PO</div>
+          <div class="brand-copy">
+            <h1>Programação Olympikus</h1>
+            <p>Dashboard detalhado da programação · foco mobile-first · tabela premium</p>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="search-wrap">
+            <span class="icon">⌕</span>
+            <input id="globalSearch" type="text" placeholder="Buscar por cliente, referência, descrição, cor, GCI..." />
+          </div>
+          <div class="action-row">
+            <button class="btn" id="openFiltersBtn">⚙︎ Filtros</button>
+            <button class="btn" id="openColumnsBtn">▥ Colunas</button>
+            <button class="btn" id="refreshBtn">↻ Atualizar</button>
+            <button class="btn soft" id="clearAllBtn">Limpar</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="kpis" id="kpis"></section>
+
+      <section class="panel">
+        <div class="panel-top">
+          <div class="panel-summary">
+            <div>
+              <div class="summary-title" id="summaryTitle">Carregando base...</div>
+              <div class="summary-text" id="summaryText">Lendo DETALHADA.xlsx diretamente do repositório.</div>
+            </div>
+            <div class="footer-note">Imagem principal sob demanda · preferências de colunas salvas no navegador</div>
+          </div>
+          <div class="chip-row" id="activeChips"></div>
+        </div>
+
+        <div class="table-shell" id="tableShell">
+          <div class="loading-state"><strong>Carregando dados...</strong>Por favor, aguarde.</div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawerBackdrop"></div>
+
+  <aside class="drawer" id="filtersDrawer" aria-hidden="true">
+    <div class="drawer-header">
+      <h2 class="drawer-title">Filtros dinâmicos</h2>
+      <button class="btn small" data-close-drawer="filtersDrawer">Fechar</button>
+    </div>
+    <div class="drawer-body" id="filtersBody"></div>
+    <div class="drawer-footer">
+      <button class="btn primary" id="applyFiltersBtn">Aplicar</button>
+      <button class="btn" id="resetFiltersBtn">Limpar filtros</button>
+    </div>
+  </aside>
+
+  <aside class="drawer" id="columnsDrawer" aria-hidden="true">
+    <div class="drawer-header">
+      <h2 class="drawer-title">Colunas visíveis</h2>
+      <button class="btn small" data-close-drawer="columnsDrawer">Fechar</button>
+    </div>
+    <div class="drawer-body">
+      <div class="toggle-grid" id="columnsGrid"></div>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn primary" id="saveColumnsBtn">Salvar</button>
+      <button class="btn" id="resetColumnsBtn">Restaurar padrão</button>
+    </div>
+  </aside>
+
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <section class="modal" id="imageModal" aria-hidden="true">
+    <div class="modal-head">
+      <div>
+        <strong id="modalTitle">Imagem do produto</strong>
+      </div>
+      <button class="btn small" id="closeModalBtn">Fechar</button>
+    </div>
+    <div class="modal-body">
+      <div class="image-box" id="imageBox"></div>
+      <div class="modal-grid" id="modalMeta"></div>
+    </div>
+  </section>
+
+  <script>
+    const XLSX_PATH = './DETALHADA.xlsx';
+    const IMAGE_FOLDER = './imagens_olympikus/';
+    const IMAGE_EXTENSION = '.jpg';
+    const PAGE_SIZE_OPTIONS = [25, 50, 100, 250];
+    const DEFAULT_PAGE_SIZE = 50;
+    const LS_COLUMNS_KEY = 'programacao-olympikus-columns-v1';
+
+    const COLUMN_DEFS = [
+      { key: 'IMAGEM', label: 'Imagem', type: 'image', visibleByDefault: false },
+      { key: 'NOME FANTASIA', label: 'Nome', type: 'text', visibleByDefault: true },
+      { key: 'CODIGO', label: 'Código', type: 'number', visibleByDefault: false },
+      { key: 'PORTA', label: 'Porta', type: 'text', visibleByDefault: true },
+      { key: 'MARCA', label: 'Marca', type: 'text', visibleByDefault: true },
+      { key: 'FABRICA', label: 'Fábrica', type: 'text', visibleByDefault: false },
+      { key: 'FILIAL', label: 'Filial', type: 'text', visibleByDefault: false },
+      { key: 'NF', label: 'NF', type: 'text', visibleByDefault: false },
+      { key: 'OC', label: 'OC', type: 'text', visibleByDefault: false },
+      { key: 'GCI', label: 'GCI', type: 'text', visibleByDefault: true },
+      { key: 'REFERENCIA', label: 'Referência', type: 'text', visibleByDefault: true },
+      { key: 'DESCRICAO', label: 'Descrição', type: 'text', visibleByDefault: true },
+      { key: 'COR', label: 'Cor', type: 'text', visibleByDefault: true },
+      { key: 'PREV FAT', label: 'Prev. Fat', type: 'date', visibleByDefault: true },
+      { key: 'CART', label: 'Cart', type: 'number', visibleByDefault: true },
+      { key: 'FAT', label: 'Fat', type: 'number', visibleByDefault: true },
+      { key: 'DATA FAT', label: 'Data Fat', type: 'date', visibleByDefault: true },
+      { key: 'CONCAT', label: 'Concat', type: 'text', visibleByDefault: false },
+      { key: 'STATUS 1', label: 'Status 1', type: 'text', visibleByDefault: false },
+      { key: 'STATUS 2', label: 'Status 2', type: 'text', visibleByDefault: false },
+      { key: 'STATUS 3', label: 'Status 3', type: 'text', visibleByDefault: false }
+    ];
+
+    const FILTER_FIELDS = [
+      { key: 'NOME FANTASIA', type: 'select' },
+      { key: 'PORTA', type: 'select' },
+      { key: 'MARCA', type: 'select' },
+      { key: 'REFERENCIA', type: 'text' },
+      { key: 'DESCRICAO', type: 'text' },
+      { key: 'COR', type: 'select' },
+      { key: 'GCI', type: 'text' },
+      { key: 'PREV FAT', type: 'date' },
+      { key: 'DATA FAT', type: 'date' },
+      { key: 'STATUS 1', type: 'select' },
+      { key: 'STATUS 2', type: 'select' },
+      { key: 'STATUS 3', type: 'select' },
+      { key: '__IMAGE__', label: 'Imagem principal', type: 'select', options: ['', 'Com imagem', 'Sem imagem'] }
+    ];
+
+    const state = {
+      raw: [],
+      filtered: [],
+      visibleColumns: new Set(),
+      draftFilters: {},
+      filters: {},
+      sort: { key: 'PREV FAT', dir: 'asc' },
+      page: 1,
+      pageSize: DEFAULT_PAGE_SIZE,
+      loading: true
+    };
+
+    const els = {
+      globalSearch: document.getElementById('globalSearch'),
+      kpis: document.getElementById('kpis'),
+      summaryTitle: document.getElementById('summaryTitle'),
+      summaryText: document.getElementById('summaryText'),
+      tableShell: document.getElementById('tableShell'),
+      pagination: document.getElementById('pagination'),
+      activeChips: document.getElementById('activeChips'),
+      filtersBody: document.getElementById('filtersBody'),
+      columnsGrid: document.getElementById('columnsGrid'),
+      filtersDrawer: document.getElementById('filtersDrawer'),
+      columnsDrawer: document.getElementById('columnsDrawer'),
+      drawerBackdrop: document.getElementById('drawerBackdrop'),
+      modalBackdrop: document.getElementById('modalBackdrop'),
+      imageModal: document.getElementById('imageModal'),
+      imageBox: document.getElementById('imageBox'),
+      modalMeta: document.getElementById('modalMeta'),
+      modalTitle: document.getElementById('modalTitle')
+    };
+
+    function initVisibleColumns() {
+      const saved = localStorage.getItem(LS_COLUMNS_KEY);
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          state.visibleColumns = new Set(parsed);
+          return;
+        } catch (e) {}
+      }
+      state.visibleColumns = new Set(COLUMN_DEFS.filter(c => c.visibleByDefault).map(c => c.key));
+    }
+
+    function saveVisibleColumns() {
+      localStorage.setItem(LS_COLUMNS_KEY, JSON.stringify([...state.visibleColumns]));
+    }
+
+    function normalizeValue(value, type) {
+      if (value === null || value === undefined || value === '') return '';
+      if (type === 'date') {
+        const d = asDate(value);
+        return d ? d.toISOString().slice(0, 10) : '';
+      }
+      return String(value).trim();
+    }
+
+    function asDate(value) {
+      if (!value) return null;
+      if (value instanceof Date && !isNaN(value)) return value;
+      const date = new Date(value);
+      return isNaN(date) ? null : date;
+    }
+
+    function formatDate(value) {
+      const d = asDate(value);
+      return d ? d.toLocaleDateString('pt-BR') : '—';
+    }
+
+    function formatNumber(value) {
+      const n = Number(value || 0);
+      return n.toLocaleString('pt-BR');
+    }
+
+    function statusBadge(value) {
+      if (value === null || value === undefined || value === '') return '<span class="badge empty">—</span>';
+      return `<span class="badge">${escapeHtml(String(value))}</span>`;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getColumnDef(key) {
+      return COLUMN_DEFS.find(c => c.key === key);
+    }
+
+    function getImagePath(record) {
+      const imageName = record['IMAGEM'];
+      if (!imageName) return '';
+      return `${IMAGE_FOLDER}${encodeURIComponent(String(imageName).trim())}${IMAGE_EXTENSION}`;
+    }
+
+    function parseWorkbookToJson(workbook) {
+      const ws = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(ws, { defval: '', raw: false, cellDates: true });
+      return json.map((row, idx) => ({
+        __id: idx + 1,
+        ...row,
+        __imagePath: row['IMAGEM'] ? getImagePath(row) : '',
+        __search: [
+          row['NOME FANTASIA'], row['PORTA'], row['MARCA'], row['REFERENCIA'], row['DESCRICAO'], row['COR'], row['GCI']
+        ].filter(Boolean).join(' ').toLowerCase()
+      }));
+    }
+
+    async function loadData() {
+      state.loading = true;
+      renderLoading();
+      try {
+        const response = await fetch(XLSX_PATH, { cache: 'no-store' });
+        if (!response.ok) throw new Error(`Falha ao carregar ${XLSX_PATH}`);
+        const buffer = await response.arrayBuffer();
+        const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+        state.raw = parseWorkbookToJson(workbook);
+        state.loading = false;
+        buildFiltersDrawer();
+        applyFilters();
+      } catch (error) {
+        state.loading = false;
+        els.tableShell.innerHTML = `<div class="empty-state"><strong>Não foi possível carregar a planilha.</strong>${escapeHtml(error.message)}<br>Confirme se o arquivo <code>DETALHADA.xlsx</code> está na raiz do repositório publicado.</div>`;
+        els.pagination.innerHTML = '';
+        els.kpis.innerHTML = '';
+      }
+    }
+
+    function buildFiltersDrawer() {
+      const optionsCache = {};
+      FILTER_FIELDS.forEach(field => {
+        if (field.type === 'select' && field.key !== '__IMAGE__') {
+          optionsCache[field.key] = [...new Set(state.raw.map(row => normalizeValue(row[field.key], 'text')).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b, 'pt-BR'));
+        }
+      });
+
+      els.filtersBody.innerHTML = FILTER_FIELDS.map(field => {
+        const label = field.label || getColumnDef(field.key)?.label || field.key;
+        if (field.type === 'select') {
+          const options = field.key === '__IMAGE__' ? field.options : ['', ...optionsCache[field.key]];
+          return `
+            <div class="field">
+              <label for="filter-${field.key}">${escapeHtml(label)}</label>
+              <select id="filter-${field.key}" data-filter-key="${escapeHtml(field.key)}">
+                ${options.map(opt => `<option value="${escapeHtml(opt)}">${escapeHtml(opt || 'Todos')}</option>`).join('')}
+              </select>
+            </div>`;
+        }
+        if (field.type === 'date') {
+          return `
+            <div class="field">
+              <label for="filter-${field.key}">${escapeHtml(label)}</label>
+              <input type="date" id="filter-${field.key}" data-filter-key="${escapeHtml(field.key)}" />
+            </div>`;
+        }
+        return `
+          <div class="field">
+            <label for="filter-${field.key}">${escapeHtml(label)}</label>
+            <input type="text" id="filter-${field.key}" data-filter-key="${escapeHtml(field.key)}" placeholder="Filtrar ${escapeHtml(label.toLowerCase())}" />
+          </div>`;
+      }).join('');
+
+      for (const [key, value] of Object.entries(state.filters)) {
+        const input = els.filtersBody.querySelector(`[data-filter-key="${CSS.escape(key)}"]`);
+        if (input) input.value = value;
+      }
+    }
+
+    function buildColumnsDrawer() {
+      els.columnsGrid.innerHTML = COLUMN_DEFS.map(col => `
+        <button class="toggle-item ${state.visibleColumns.has(col.key) ? 'active' : ''}" data-column-toggle="${escapeHtml(col.key)}">
+          <span>${escapeHtml(col.label)}</span>
+          <span class="switch" aria-hidden="true"></span>
+        </button>
+      `).join('');
+    }
+
+    function getDraftFiltersFromUI() {
+      const draft = { global: els.globalSearch.value.trim() };
+      els.filtersBody.querySelectorAll('[data-filter-key]').forEach(input => {
+        if (input.value) draft[input.dataset.filterKey] = input.value;
+      });
+      state.draftFilters = draft;
+      return draft;
+    }
+
+    function applyFilters() {
+      const filters = { ...state.filters, global: els.globalSearch.value.trim() };
+      state.filters = filters;
+
+      let data = [...state.raw];
+      if (filters.global) {
+        const q = filters.global.toLowerCase();
+        data = data.filter(row => row.__search.includes(q));
+      }
+
+      FILTER_FIELDS.forEach(field => {
+        const value = filters[field.key];
+        if (!value) return;
+        if (field.key === '__IMAGE__') {
+          data = data.filter(row => value === 'Com imagem' ? !!row.__imagePath : !row.__imagePath);
+          return;
+        }
+        const def = getColumnDef(field.key);
+        if (field.type === 'date') {
+          data = data.filter(row => normalizeValue(row[field.key], def?.type) === value);
+        } else {
+          if (field.type === 'select') {
+            data = data.filter(row => normalizeValue(row[field.key], 'text') === value);
+          } else {
+            data = data.filter(row => normalizeValue(row[field.key], 'text').toLowerCase().includes(value.toLowerCase()));
+          }
+        }
+      });
+
+      const { key, dir } = state.sort;
+      const type = getColumnDef(key)?.type || 'text';
+      data.sort((a, b) => compareValues(a[key], b[key], type, dir));
+
+      state.filtered = data;
+      state.page = 1;
+      renderAll();
+    }
+
+    function rowValue(row, key) {
+      return row[key];
+    }
+
+    function compareValues(a, b, type, dir) {
+      let result = 0;
+      if (type === 'number') {
+        result = (Number(a || 0) - Number(b || 0));
+      } else if (type === 'date') {
+        result = (asDate(a)?.getTime() || 0) - (asDate(b)?.getTime() || 0);
+      } else {
+        result = String(a || '').localeCompare(String(b || ''), 'pt-BR', { numeric: true, sensitivity: 'base' });
+      }
+      return dir === 'asc' ? result : -result;
+    }
+
+    function renderAll() {
+      renderKpis();
+      renderSummary();
+      renderChips();
+      renderTable();
+      renderPagination();
+      buildColumnsDrawer();
+    }
+
+    function renderLoading() {
+      els.tableShell.innerHTML = '<div class="loading-state"><strong>Carregando base detalhada...</strong>Montando filtros, colunas e métricas.</div>';
+    }
+
+    function renderKpis() {
+      const data = state.filtered;
+      const raw = state.raw;
+      const totalFaturado = data.reduce((sum, row) => sum + Number(row['FAT'] || 0), 0);
+      const totalAFaturar = data.reduce((sum, row) => sum + Math.max(Number(row['CART'] || 0) - Number(row['FAT'] || 0), 0), 0);
+      const totalClientes = new Set(data.map(r => (r['NOME FANTASIA'] || '').trim()).filter(Boolean)).size;
+      const totalComImagem = data.filter(row => !!row.__imagePath).length;
+
+      const cards = [
+        { label: 'Registros filtrados', value: formatNumber(data.length), sub: `${formatNumber(raw.length)} na base total` },
+        { label: 'Total faturado', value: formatNumber(totalFaturado), sub: 'Soma da coluna FAT' },
+        { label: 'Total a faturar', value: formatNumber(totalAFaturar), sub: 'CART - FAT, sem negativos' },
+        { label: 'Clientes únicos', value: formatNumber(totalClientes), sub: `${formatNumber(totalComImagem)} registros com imagem principal` }
+      ];
+
+      els.kpis.innerHTML = cards.map(card => `
+        <article class="kpi">
+          <div class="kpi-label">${escapeHtml(card.label)}</div>
+          <div class="kpi-value">${escapeHtml(card.value)}</div>
+          <div class="kpi-sub">${escapeHtml(card.sub)}</div>
+        </article>
+      `).join('');
+    }
+
+    function renderSummary() {
+      const start = state.filtered.length ? ((state.page - 1) * state.pageSize) + 1 : 0;
+      const end = Math.min(state.filtered.length, state.page * state.pageSize);
+      els.summaryTitle.textContent = `${formatNumber(state.filtered.length)} registros encontrados`;
+      els.summaryText.textContent = state.filtered.length
+        ? `Exibindo ${formatNumber(start)}–${formatNumber(end)}. Ordenado por ${getColumnDef(state.sort.key)?.label || state.sort.key}.`
+        : 'Nenhum registro corresponde aos filtros atuais.';
+    }
+
+    function renderChips() {
+      const chips = [];
+      if (state.filters.global) chips.push({ key: 'global', label: `Busca: ${state.filters.global}` });
+      FILTER_FIELDS.forEach(field => {
+        const value = state.filters[field.key];
+        if (!value) return;
+        chips.push({ key: field.key, label: `${field.label || getColumnDef(field.key)?.label || field.key}: ${value}` });
+      });
+      els.activeChips.innerHTML = chips.map(chip => `
+        <span class="chip">${escapeHtml(chip.label)} <button data-remove-chip="${escapeHtml(chip.key)}">×</button></span>
+      `).join('');
+    }
+
+    function renderTable() {
+      if (!state.filtered.length) {
+        els.tableShell.innerHTML = '<div class="empty-state"><strong>Nenhum resultado encontrado.</strong>Ajuste os filtros, troque as colunas visíveis ou limpe a busca global.</div>';
+        return;
+      }
+
+      const visibleCols = COLUMN_DEFS.filter(col => state.visibleColumns.has(col.key));
+      const pageRows = getCurrentPageRows();
+
+      const thead = `
+        <thead>
+          <tr>
+            ${visibleCols.map(col => `<th><button class="link-btn" data-sort="${escapeHtml(col.key)}">${escapeHtml(col.label)} ${state.sort.key === col.key ? (state.sort.dir === 'asc' ? '↑' : '↓') : ''}</button></th>`).join('')}
+            <th>Ações</th>
+          </tr>
+        </thead>`;
+
+      const tbody = `
+        <tbody>
+          ${pageRows.map(row => `
+            <tr>
+              ${visibleCols.map(col => renderCell(row, col)).join('')}
+              <td>
+                <button class="link-btn" data-preview-id="${row.__id}" ${row.__imagePath ? '' : 'disabled'}>${row.__imagePath ? 'Ver imagem' : 'Sem imagem'}</button>
+              </td>
+            </tr>
+          `).join('')}
+        </tbody>`;
+
+      els.tableShell.innerHTML = `<table>${thead}${tbody}</table>`;
+    }
+
+    function renderCell(row, col) {
+      const value = row[col.key];
+      if (col.type === 'image') {
+        return `<td>${row.__imagePath ? '<span class="badge">Disponível</span>' : '<span class="badge empty">Não</span>'}</td>`;
+      }
+      if (col.type === 'number') {
+        return `<td class="col-number">${escapeHtml(formatNumber(value))}</td>`;
+      }
+      if (col.type === 'date') {
+        return `<td class="col-date">${escapeHtml(formatDate(value))}</td>`;
+      }
+      if (col.key.startsWith('STATUS')) {
+        return `<td>${statusBadge(value)}</td>`;
+      }
+      if (col.key === 'NOME FANTASIA') {
+        return `<td class="col-name">${escapeHtml(value || '—')}</td>`;
+      }
+      if (col.key === 'REFERENCIA') {
+        return `<td class="col-ref">${escapeHtml(value || '—')}</td>`;
+      }
+      return `<td>${escapeHtml(value || '—')}</td>`;
+    }
+
+    function renderPagination() {
+      if (!state.filtered.length) {
+        els.pagination.innerHTML = '';
+        return;
+      }
+      const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+      els.pagination.innerHTML = `
+        <div class="pagination-group">
+          <span class="meta">Página ${formatNumber(state.page)} de ${formatNumber(totalPages)}</span>
+          <button class="btn small" id="prevPageBtn" ${state.page <= 1 ? 'disabled' : ''}>← Anterior</button>
+          <button class="btn small" id="nextPageBtn" ${state.page >= totalPages ? 'disabled' : ''}>Próxima →</button>
+        </div>
+        <div class="pagination-group">
+          <span class="meta">Linhas por página</span>
+          <select class="page-size" id="pageSizeSelect">
+            ${PAGE_SIZE_OPTIONS.map(size => `<option value="${size}" ${size === state.pageSize ? 'selected' : ''}>${size}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    function getCurrentPageRows() {
+      const start = (state.page - 1) * state.pageSize;
+      return state.filtered.slice(start, start + state.pageSize);
+    }
+
+    function openDrawer(id) {
+      els.drawerBackdrop.classList.add('show');
+      document.getElementById(id).classList.add('show');
+      document.getElementById(id).setAttribute('aria-hidden', 'false');
+    }
+    function closeDrawers() {
+      els.drawerBackdrop.classList.remove('show');
+      [els.filtersDrawer, els.columnsDrawer].forEach(d => {
+        d.classList.remove('show');
+        d.setAttribute('aria-hidden', 'true');
+      });
+    }
+
+    function openImageModal(record) {
+      els.modalTitle.textContent = `${record['REFERENCIA'] || 'Produto'} · ${record['COR'] || 'Cor'}`;
+      els.imageBox.innerHTML = record.__imagePath
+        ? `<img src="${record.__imagePath}" alt="${escapeHtml(record['DESCRICAO'] || 'Produto')}" onerror="this.parentNode.innerHTML='<div class=\'empty-state\'><strong>Imagem não localizada.</strong>Confira se o nome do arquivo e o caminho publicado estão corretos.</div>'">`
+        : `<div class="empty-state"><strong>Sem imagem principal.</strong>Este registro não possui valor na coluna IMAGEM.</div>`;
+      const metaFields = ['NOME FANTASIA', 'PORTA', 'MARCA', 'GCI', 'DESCRICAO', 'PREV FAT', 'CART', 'FAT', 'DATA FAT'];
+      els.modalMeta.innerHTML = metaFields.map(key => {
+        const def = getColumnDef(key);
+        let value = record[key];
+        if (def?.type === 'date') value = formatDate(value);
+        if (def?.type === 'number') value = formatNumber(value);
+        return `<div class="meta-card"><div class="label">${escapeHtml(def?.label || key)}</div><div class="value">${escapeHtml(value || '—')}</div></div>`;
+      }).join('');
+      els.modalBackdrop.classList.add('show');
+      els.imageModal.classList.add('show');
+      els.imageModal.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeImageModal() {
+      els.modalBackdrop.classList.remove('show');
+      els.imageModal.classList.remove('show');
+      els.imageModal.setAttribute('aria-hidden', 'true');
+    }
+
+    function resetColumnsToDefault() {
+      state.visibleColumns = new Set(COLUMN_DEFS.filter(c => c.visibleByDefault).map(c => c.key));
+      buildColumnsDrawer();
+    }
+
+    function resetFilters() {
+      state.filters = {};
+      els.globalSearch.value = '';
+      buildFiltersDrawer();
+      applyFilters();
+      closeDrawers();
+    }
+
+    document.getElementById('openFiltersBtn').addEventListener('click', () => openDrawer('filtersDrawer'));
+    document.getElementById('openColumnsBtn').addEventListener('click', () => openDrawer('columnsDrawer'));
+    document.getElementById('refreshBtn').addEventListener('click', loadData);
+    document.getElementById('clearAllBtn').addEventListener('click', resetFilters);
+    document.getElementById('applyFiltersBtn').addEventListener('click', () => {
+      state.filters = getDraftFiltersFromUI();
+      applyFilters();
+      closeDrawers();
+    });
+    document.getElementById('resetFiltersBtn').addEventListener('click', resetFilters);
+    document.getElementById('saveColumnsBtn').addEventListener('click', () => {
+      saveVisibleColumns();
+      renderAll();
+      closeDrawers();
+    });
+    document.getElementById('resetColumnsBtn').addEventListener('click', resetColumnsToDefault);
+    document.getElementById('closeModalBtn').addEventListener('click', closeImageModal);
+    els.drawerBackdrop.addEventListener('click', closeDrawers);
+    els.modalBackdrop.addEventListener('click', closeImageModal);
+    document.querySelectorAll('[data-close-drawer]').forEach(btn => btn.addEventListener('click', closeDrawers));
+
+    let searchTimer = null;
+    els.globalSearch.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.filters.global = els.globalSearch.value.trim();
+        applyFilters();
+      }, 180);
+    });
+
+    document.addEventListener('click', (event) => {
+      const toggle = event.target.closest('[data-column-toggle]');
+      if (toggle) {
+        const key = toggle.dataset.columnToggle;
+        if (state.visibleColumns.has(key)) state.visibleColumns.delete(key);
+        else state.visibleColumns.add(key);
+        toggle.classList.toggle('active');
+        return;
+      }
+
+      const sortBtn = event.target.closest('[data-sort]');
+      if (sortBtn) {
+        const key = sortBtn.dataset.sort;
+        if (state.sort.key === key) state.sort.dir = state.sort.dir === 'asc' ? 'desc' : 'asc';
+        else state.sort = { key, dir: 'asc' };
+        applyFilters();
+        return;
+      }
+
+      const previewBtn = event.target.closest('[data-preview-id]');
+      if (previewBtn) {
+        const id = Number(previewBtn.dataset.previewId);
+        const record = state.filtered.find(row => row.__id === id);
+        if (record) openImageModal(record);
+        return;
+      }
+
+      const chipBtn = event.target.closest('[data-remove-chip]');
+      if (chipBtn) {
+        const key = chipBtn.dataset.removeChip;
+        if (key === 'global') els.globalSearch.value = '';
+        delete state.filters[key];
+        buildFiltersDrawer();
+        applyFilters();
+        return;
+      }
+
+      if (event.target.id === 'prevPageBtn' && state.page > 1) {
+        state.page -= 1;
+        renderSummary();
+        renderTable();
+        renderPagination();
+        return;
+      }
+      if (event.target.id === 'nextPageBtn') {
+        const totalPages = Math.max(1, Math.ceil(state.filtered.length / state.pageSize));
+        if (state.page < totalPages) {
+          state.page += 1;
+          renderSummary();
+          renderTable();
+          renderPagination();
+        }
+      }
+    });
+
+    document.addEventListener('change', (event) => {
+      if (event.target.id === 'pageSizeSelect') {
+        state.pageSize = Number(event.target.value);
+        state.page = 1;
+        renderSummary();
+        renderTable();
+        renderPagination();
+      }
+    });
+
+    initVisibleColumns();
+    buildColumnsDrawer();
+    loadData();
+  </script>
+</body>
+</html>
