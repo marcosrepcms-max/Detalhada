@@ -277,7 +277,8 @@
       table-layout:fixed;
     }
     thead {
-      position:sticky;top:0;z-index:20;
+      position:relative;
+      z-index:20;
     }
     th {
       font-size:var(--th);font-weight:700;text-transform:uppercase;
@@ -288,7 +289,9 @@
       border-top:1px solid #c8d0e8;
       padding:var(--tp);white-space:nowrap;
       text-align:center;
-      position:relative;
+      position:sticky;
+      top:0;
+      z-index:25;
       overflow:hidden;
     }
     th:first-child{border-left:1px solid #c8d0e8;}
