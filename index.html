@@ -269,10 +269,11 @@
 
     /* Table shell */
     #tableWrap {
-      flex:1;overflow:auto;position:relative;
+      flex:1;overflow:auto;
+      /* must NOT have position:relative for sticky thead to work */
     }
     table {
-      width:100%;border-collapse:collapse;font-size:var(--ts);
+      width:100%;border-collapse:separate;border-spacing:0;font-size:var(--ts);
       table-layout:fixed;
     }
     thead {
@@ -283,12 +284,15 @@
       letter-spacing:0.04em;color:#3a4070;
       background:linear-gradient(180deg,#e8ecf8 0%,#dde3f4 100%);
       border-bottom:2px solid #b8c2e0;border-right:1px solid #c8d0e8;
+      /* With border-collapse:separate we need top border too */
+      border-top:1px solid #c8d0e8;
       padding:var(--tp);white-space:nowrap;
       text-align:center;
-      position:relative; /* for resize handle */
+      position:relative;
       overflow:hidden;
     }
-    th:last-child{border-right:none;}
+    th:first-child{border-left:1px solid #c8d0e8;}
+    th:last-child{border-right:1px solid #c8d0e8;}
     th .th-inner{display:flex;align-items:center;justify-content:center;gap:3px;}
     th button.sort-btn{
       background:none;border:none;cursor:pointer;
@@ -312,7 +316,8 @@
       border-right:1px solid var(--line);vertical-align:middle;
       text-align:center;
     }
-    td:last-child{border-right:none;}
+    td:first-child{border-left:1px solid var(--line);}
+    td:last-child{border-right:1px solid var(--line);}
     tr:hover td{background:rgba(40,54,212,0.03);}
     .col-num{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;}
     .col-date{white-space:nowrap;color:var(--muted);text-align:center;}
@@ -321,6 +326,23 @@
     /* Row selection */
     tr.selected td { background:rgba(40,54,212,0.10) !important; }
     tr { cursor:pointer; }
+
+    /* ── TOAST / COPY FEEDBACK ── */
+    #toast {
+      position:fixed;bottom:0;left:0;right:0;
+      background:#1e2744;color:#fff;
+      font-size:0.75rem;font-weight:500;
+      padding:7px 16px;
+      display:flex;align-items:center;gap:8px;
+      transform:translateY(100%);transition:transform 0.2s;
+      z-index:500;
+    }
+    #toast.show{transform:translateY(0);}
+    #toast .toast-icon{font-size:0.9rem;color:#7be0a8;}
+    #toast .toast-val{
+      font-weight:700;color:#a5b4fc;
+      max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
 
     /* Badges */
     .badge {
@@ -503,6 +525,9 @@
     <button class="tb-btn primary" id="cfpApply" style="font-size:0.72rem;">Aplicar</button>
   </div>
 </div>
+
+<!-- TOAST -->
+<div id="toast"><span class="toast-icon">✓</span><span>Copiado:</span><span class="toast-val" id="toastVal"></span></div>
 
 <!-- IMAGE MODAL -->
 <div id="modalBackdrop"></div>
@@ -970,12 +995,12 @@ function renderTable(){
       </div>
       <div class="col-resizer" data-resize-col="${esc(c.key)}"></div>
     </th>`).join('')}
-    <th style="width:36px;min-width:36px;"><div class="th-inner">Img</div></th>
+    <th style="width:56px;min-width:56px;"><div class="th-inner">IMG</div></th>
   </tr></thead>`;
 
   const tbody=`<tbody>${rows.map(row=>`<tr data-row-id="${row.__id}" class="${S.selectedRowId===row.__id?'selected':''}">
     ${vcols.map(c=>renderCell(row,c)).join('')}
-    <td>${row.__img?`<button class="img-btn" data-pid="${row.__id}">ver</button>`:`<span style="color:var(--muted);font-size:0.65rem;">—</span>`}</td>
+    <td style="width:56px;min-width:56px;text-align:center;">${row.__img?`<button class="img-btn" data-pid="${row.__id}">ver</button>`:`<span style="color:var(--muted);font-size:0.65rem;">—</span>`}</td>
   </tr>`).join('')}</tbody>`;
 
   tw.innerHTML=`<table>${thead}${tbody}</table>`;
@@ -1243,7 +1268,36 @@ document.getElementById('modalBackdrop')?.addEventListener('click',closeModal);
   });
 })();
 
-// ── Column filter panel ───────────────────────────────────────────
+// ESC clears search
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape'){
+    if(gSearch && gSearch.value){ gSearch.value=''; applyAndRender(); }
+    closeColFilter();
+  }
+});
+
+// ── Copy on text selection ────────────────────────────────────────
+let _toastTimer=null;
+function showToast(val){
+  const t=document.getElementById('toast');
+  const tv=document.getElementById('toastVal');
+  if(!t||!tv) return;
+  tv.textContent=val;
+  t.classList.add('show');
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+document.addEventListener('mouseup',(e)=>{
+  const sel=window.getSelection();
+  if(!sel||sel.isCollapsed) return;
+  const txt=sel.toString().trim();
+  if(!txt) return;
+  // Only copy if selection is inside the table
+  const anchor=sel.anchorNode?.parentElement;
+  if(!anchor?.closest('#tableWrap')) return;
+  navigator.clipboard.writeText(txt).then(()=>showToast(txt)).catch(()=>{});
+});
 let _cfpKey = null;
 const cfpEl = document.getElementById('colFilterPanel');
 
