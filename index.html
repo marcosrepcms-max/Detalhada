@@ -626,7 +626,7 @@ const optsCache = {};
 
 function buildFilterBar(){
   const bar = document.getElementById('filterBar');
-  bar.innerHTML = '';
+  if(!bar || !FILTERS.length) return; // nothing to build
   FILTERS.forEach(f => {
     const wrap = document.createElement('div');
     wrap.className = 'filter-group';
@@ -815,7 +815,6 @@ function lastDayOfMonth(ym){ // ym = "YYYY-MM"
 }
 
 function syncFilterUI(){
-  // Update multi-select trigger labels after data reload
   document.querySelectorAll('.ms-wrap').forEach(wrap=>{
     const k=wrap.dataset.msKey;
     const trigger=wrap.querySelector('.ms-trigger');
@@ -916,7 +915,8 @@ function renderKpis(){
     {label:'Clientes',value:fmtNum(clients),sub:'únicos filtrados'},
   ];
 
-  document.getElementById('kpisRow').innerHTML = kpis.map(k=>`
+  const kpisEl = document.getElementById('kpisRow');
+  if(kpisEl) kpisEl.innerHTML = kpis.map(k=>`
     <div class="kpi">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value">${k.value}</div>
@@ -1069,16 +1069,18 @@ function applyUiPrefs(){
   document.body.classList.add(S.ui.fontSize||'fs-sm');
   const fsSel=document.getElementById('fsSel');
   if(fsSel) fsSel.value=S.ui.fontSize||'fs-sm';
-  const kpis=document.getElementById('kpisRow');
-  if(S.ui.kpisHidden) kpis.classList.add('hidden');
-  else kpis.classList.remove('hidden');
-  document.getElementById('btnToggleKpis').classList.toggle('active',!S.ui.kpisHidden);
+  const kpisEl2=document.getElementById('kpisRow');
+  if(kpisEl2){
+    if(S.ui.kpisHidden) kpisEl2.classList.add('hidden');
+    else kpisEl2.classList.remove('hidden');
+  }
+  document.getElementById('btnToggleKpis')?.classList.toggle('active',!S.ui.kpisHidden);
 }
 
 // ── Events ────────────────────────────────────────────────────────
 // Global search
 const gSearch=document.getElementById('globalSearch');
-gSearch.addEventListener('input', debounce(applyAndRender, 200));
+gSearch?.addEventListener('input', debounce(applyAndRender, 200));
 
 // Year select - populate after data loads, handle change
 function buildYearSelect(){
@@ -1091,13 +1093,15 @@ function buildYearSelect(){
 document.getElementById('yearSel')?.addEventListener('change', applyAndRender);
 
 // Topbar buttons
-document.getElementById('btnToggleKpis').addEventListener('click',()=>{
+document.getElementById('btnToggleKpis')?.addEventListener('click',()=>{
   S.ui.kpisHidden=!S.ui.kpisHidden; applyUiPrefs(); savePrefs();
 });
-document.getElementById('btnRefresh').addEventListener('click', loadData);
-document.getElementById('btnClearAll').addEventListener('click',()=>{
+document.getElementById('btnRefresh')?.addEventListener('click', loadData);
+document.getElementById('btnClearAll')?.addEventListener('click',()=>{
   S.filters={};
-  gSearch.value='';
+  S.colFilters={};
+  if(gSearch) gSearch.value='';
+  const ys=document.getElementById('yearSel'); if(ys) ys.value='';
   buildFilterBar();
   applyAndRender();
 });
@@ -1112,12 +1116,12 @@ if(fsSel){
 
 // Columns panel toggle
 const colPanel=document.getElementById('columnsPanel');
-document.getElementById('btnToggleCols').addEventListener('click',(e)=>{
+document.getElementById('btnToggleCols')?.addEventListener('click',(e)=>{
   e.stopPropagation();
-  colPanel.classList.toggle('open');
+  colPanel?.classList.toggle('open');
 });
 document.addEventListener('click',(e)=>{
-  if(!colPanel.contains(e.target)&&e.target!==document.getElementById('btnToggleCols')){
+  if(colPanel && !colPanel.contains(e.target)&&e.target!==document.getElementById('btnToggleCols')){
     colPanel.classList.remove('open');
   }
 });
@@ -1167,24 +1171,8 @@ document.addEventListener('click',(e)=>{
   if(chip){
     const k=chip.dataset.chip;
     if(k==='__global__'){ gSearch.value=''; }
-    else {
-      delete S.filters[k];
-      // Update UI for that filter
-      const msWrap=document.querySelector(`.ms-wrap[data-ms-key="${CSS.escape(k)}"]`);
-      if(msWrap){
-        msWrap.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=false);
-        const trig=msWrap.querySelector('.ms-trigger');
-        trig.querySelector('.ms-label').textContent='Todos';
-        trig.classList.remove('has-value');
-      }
-      const drWrap=document.querySelector(`.date-range[data-dr-key="${CSS.escape(k)}"]`);
-      if(drWrap){
-        drWrap.querySelectorAll('input[type=date]').forEach(i=>i.value='');
-        drWrap.classList.remove('has-value');
-      }
-      const txInp=document.querySelector(`input.filter-input[data-filter-key="${CSS.escape(k)}"]`);
-      if(txInp){ txInp.value=''; txInp.classList.remove('has-value'); }
-    }
+    else if(k==='__year__'){ const ys=document.getElementById('yearSel'); if(ys) ys.value=''; }
+    else { delete S.colFilters[k]; delete S.filters[k]; }
     applyAndRender(); return;
   }
   // Pagination
@@ -1219,8 +1207,8 @@ function closeModal(){
   document.getElementById('modalBackdrop').classList.remove('open');
   document.getElementById('imageModal').classList.remove('open');
 }
-document.getElementById('btnCloseModal').addEventListener('click',closeModal);
-document.getElementById('modalBackdrop').addEventListener('click',closeModal);
+document.getElementById('btnCloseModal')?.addEventListener('click',closeModal);
+document.getElementById('modalBackdrop')?.addEventListener('click',closeModal);
 
 // ── Column resize ─────────────────────────────────────────────────
 (function setupColResize(){
