@@ -635,7 +635,9 @@
 
     
     .top-actions-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
-    .toolbar-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .toolbar-controls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-end;width:100%}
+    .toolbar-controls > *{flex:0 0 auto;}
+    .compact-select{height:44px;}
     .kpis.is-hidden{display:none;}
     .content.kpis-hidden{padding-top:10px;}
     .table-shell.fullscreen{
@@ -680,6 +682,13 @@
       max-width: 168px;
     }
     .compact-select.size-select{max-width: 126px;}
+    @media (max-width: 879px){
+      .topbar-inner{padding:12px 12px;}
+      .brand{justify-content:flex-start;}
+      .toolbar-controls{justify-content:flex-start;}
+      .search-wrap.expanded input{width:min(78vw,320px);}
+      .compact-select{min-width:120px;}
+    }
 
 
     @media (min-width: 880px) {
@@ -688,9 +697,12 @@
         gap: 16px;
       }
       .toolbar {
-        grid-template-columns: minmax(260px, 1fr) auto;
-        align-items: center;
+        display:flex;
+        justify-content:flex-end;
+        align-items:center;
       }
+      .toolbar-controls{justify-content:flex-end;flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px;}
+      .search-wrap.expanded input{width:320px;}
       .action-row { justify-content: flex-end; }
       .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
       .modal {
@@ -763,9 +775,9 @@
           <div class="panel-summary">
             <div>
               <div class="summary-title" id="summaryTitle">Carregando base...</div>
-              <div class="summary-text" id="summaryText">Lendo DETALHADA.xlsx diretamente do repositório.</div>
+              <div class="summary-text" id="summaryText"></div>
             </div>
-            <div class="footer-note">Imagem principal sob demanda · preferências de colunas salvas no navegador</div>
+            
           </div>
           <div class="chip-row" id="activeChips"></div>
         </div>
@@ -932,8 +944,8 @@
     }
 
     function applyUiPrefs() {
-      document.body.classList.remove('font-inter','font-manrope','font-jakarta','font-ibm','font-sm','font-md','font-lg','fullscreen-mode');
-      document.body.classList.add(`font-${state.ui.fontFamily}`, `font-${state.ui.fontSize}`);
+      document.body.classList.remove('font-inter','font-manrope','font-jakarta','font-ibm','font-outfit','font-dmsans','font-sora','font-urbanist','table-font-xs','table-font-sm','table-font-md','table-font-lg','table-font-xl','fullscreen-mode');
+      document.body.classList.add(`font-${state.ui.fontFamily}`, `table-font-${state.ui.fontSize}`);
       if (state.ui.kpisHidden) {
         els.kpis.classList.add('is-hidden');
         els.content.classList.add('kpis-hidden');
@@ -1387,10 +1399,6 @@
     });
     els.toggleFullscreenBtn.addEventListener('click', () => {
       state.ui.fullscreen = !state.ui.fullscreen;
-      applyUiPrefs();
-      saveUiPrefs();
-    });
-      state.ui.fontSize = order[idx];
       applyUiPrefs();
       saveUiPrefs();
     });
