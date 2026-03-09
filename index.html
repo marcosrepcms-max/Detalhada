@@ -86,6 +86,66 @@
     .tb-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
     .tb-btn.primary:hover{background:#1e2bb8;}
 
+    /* Column filter button */
+    .col-filter-btn {
+      padding:1px 3px;border-radius:3px;font-size:0.6rem;
+      color:#6070b0;background:transparent;transition:all 0.1s;
+      flex-shrink:0;line-height:1;
+    }
+    .col-filter-btn:hover,.col-filter-btn.active{
+      background:var(--primary);color:#fff;
+    }
+    /* Column filter panel (floating) */
+    #colFilterPanel {
+      position:fixed;z-index:300;
+      background:var(--surface);border:1.5px solid var(--line);border-radius:10px;
+      box-shadow:0 8px 32px rgba(30,46,110,0.18);
+      min-width:200px;max-width:280px;
+      display:none;
+    }
+    #colFilterPanel.open{display:block;}
+    .cfp-head{
+      padding:7px 10px;border-bottom:1px solid var(--line);
+      display:flex;align-items:center;justify-content:space-between;
+      font-size:0.7rem;font-weight:700;text-transform:uppercase;
+      letter-spacing:0.04em;color:var(--muted);
+      position:sticky;top:0;background:var(--surface);border-radius:10px 10px 0 0;
+    }
+    .cfp-search{
+      padding:5px 8px;border-bottom:1px solid var(--line);
+    }
+    .cfp-search input{
+      width:100%;border:1.5px solid var(--line);border-radius:6px;
+      padding:3px 7px;font-size:0.75rem;background:var(--bg);
+      outline:none;transition:border-color 0.15s;
+    }
+    .cfp-search input:focus{border-color:var(--primary);}
+    .cfp-list{max-height:220px;overflow-y:auto;}
+    .cfp-option{
+      display:flex;align-items:center;gap:7px;
+      padding:4px 10px;font-size:0.76rem;cursor:pointer;
+      transition:background 0.1s;
+    }
+    .cfp-option:hover{background:var(--bg);}
+    .cfp-option input[type=checkbox]{
+      accent-color:var(--primary);width:13px;height:13px;flex-shrink:0;cursor:pointer;
+    }
+    .cfp-option span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+    /* Month range inside cfp */
+    .cfp-month{padding:8px 10px;display:flex;flex-direction:column;gap:6px;}
+    .cfp-month label{font-size:0.64rem;font-weight:700;color:var(--muted);text-transform:uppercase;}
+    .cfp-month input[type=month]{
+      width:100%;border:1.5px solid var(--line);border-radius:6px;
+      padding:4px 7px;font-size:0.75rem;background:var(--bg);
+      outline:none;transition:border-color 0.15s;
+    }
+    .cfp-month input[type=month]:focus{border-color:var(--primary);}
+    .cfp-foot{
+      padding:6px 10px;border-top:1px solid var(--line);
+      display:flex;gap:6px;justify-content:flex-end;
+    }
+    .cfp-empty{padding:12px;text-align:center;font-size:0.75rem;color:var(--muted);}
+
     .tb-sep{width:1px;height:20px;background:var(--line);margin:0 2px;flex-shrink:0;}
 
     /* ── FILTER BAR ── */
@@ -213,10 +273,10 @@
     }
     table {
       width:100%;border-collapse:collapse;font-size:var(--ts);
+      table-layout:fixed;
     }
     thead {
-      position:sticky;top:0;z-index:10;
-      background:var(--surface2);
+      position:sticky;top:0;z-index:20;
     }
     th {
       font-size:var(--th);font-weight:700;text-transform:uppercase;
@@ -254,11 +314,13 @@
     }
     td:last-child{border-right:none;}
     tr:hover td{background:rgba(40,54,212,0.03);}
-    .col-num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
+    .col-num{text-align:center;font-variant-numeric:tabular-nums;font-weight:600;}
     .col-date{white-space:nowrap;color:var(--muted);text-align:center;}
-    .col-name{font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+    .col-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;display:block;}
     .col-ref{font-weight:600;color:var(--primary);text-align:center;}
-    td:has(.col-name){text-align:left;}
+    /* Row selection */
+    tr.selected td { background:rgba(40,54,212,0.10) !important; }
+    tr { cursor:pointer; }
 
     /* Badges */
     .badge {
@@ -388,9 +450,14 @@
     <input id="globalSearch" type="text" placeholder="Buscar cliente, referência, GCI, cor..." />
   </div>
 
-  <button class="tb-btn active" id="btnToggleFilters" title="Mostrar/ocultar filtros">⚡ Filtros</button>
   <button class="tb-btn" id="btnToggleCols" title="Colunas">▥ Colunas</button>
   <button class="tb-btn" id="btnToggleKpis" title="KPIs">◫ KPIs</button>
+
+  <!-- Year filter -->
+  <select id="yearSel" class="pg-select" title="Filtrar por ano" style="font-size:0.75rem;padding:4px 8px;">
+    <option value="">Todos os anos</option>
+  </select>
+
   <button class="tb-btn" id="btnClearAll" title="Limpar tudo">✕ Limpar</button>
   <button class="tb-btn" id="btnRefresh"><span id="refreshIcon">↻</span></button>
 
@@ -413,14 +480,6 @@
   <div id="columnsGrid"></div>
 </div>
 
-<!-- FILTER BAR -->
-<div id="filterBar">
-  <!-- built dynamically -->
-</div>
-
-<!-- CHIPS BAR -->
-<div id="chipsBar"></div>
-
 <!-- KPIs -->
 <div id="kpisRow"></div>
 
@@ -431,6 +490,19 @@
 
 <!-- PAGINATION -->
 <div id="paginationBar" style="display:none;"></div>
+
+<!-- COLUMN FILTER PANEL (floating) -->
+<div id="colFilterPanel" role="dialog">
+  <div class="cfp-head">
+    <span id="cfpTitle">Filtrar</span>
+    <button class="tb-btn" id="cfpClose" style="padding:2px 6px;font-size:0.7rem;">×</button>
+  </div>
+  <div id="cfpBody"></div>
+  <div class="cfp-foot">
+    <button class="tb-btn" id="cfpClear" style="font-size:0.72rem;">Limpar</button>
+    <button class="tb-btn primary" id="cfpApply" style="font-size:0.72rem;">Aplicar</button>
+  </div>
+</div>
 
 <!-- IMAGE MODAL -->
 <div id="modalBackdrop"></div>
@@ -479,16 +551,15 @@ const COLS = [
 ];
 
 // Filter fields config: select=multi-select, date=range, text=text input
-const FILTERS = [
-  { key:'PREV FAT',      label:'Prev.Fat',    type:'month' },
-  { key:'DATA FAT',      label:'Data Fat',    type:'month' },
-];
+const FILTERS = []; // Column-level filters used instead
 
 // ── State ───────────────────────────────────────────────────────
 const S = {
   raw:[], filtered:[],
   visibleCols: new Set(),
-  colWidths: {}, // key -> px width
+  colWidths: {},
+  colFilters: {}, // key -> [] selected values (for ms cols) or {from,to} for date/month
+  selectedRowId: null,
   // filters: { key: [] for ms, {from,to} for date, string for text }
   filters: {},
   sort: { key:'PREV FAT', dir:'asc' },
@@ -780,43 +851,35 @@ function applyFilters(){
   const q = document.getElementById('globalSearch').value.trim().toLowerCase();
   if(q) data = data.filter(r=>r.__srch.includes(q));
 
-  // Per-field
+  // Year filter (topbar select)
+  const ySel = document.getElementById('yearSel');
+  const yVal = ySel?.value||'';
+  if(yVal) data = data.filter(r=>r.__year===yVal);
+
+  // Column-level filters
+  Object.entries(S.colFilters||{}).forEach(([k,v])=>{
+    if(!v||!v.length) return;
+    const def = colDef(k);
+    if(Array.isArray(v)){
+      // ms filter
+      data = data.filter(r=>{
+        const rv = String(r[k]||'').trim();
+        return v.includes(rv);
+      });
+    } else if(v && typeof v==='object' && ('from' in v || 'to' in v)){
+      // date/month range
+      if(v.from) data=data.filter(r=>{ const d=asDate(r[k]); return d&&d>=new Date(v.from); });
+      if(v.to)   data=data.filter(r=>{ const d=asDate(r[k]); return d&&d<=new Date(v.to+'T23:59:59'); });
+    }
+  });
+
+  // Legacy FILTERS array (empty now, kept for compatibility)
   FILTERS.forEach(f=>{
     const v = S.filters[f.key];
     if(!v) return;
-
-    if(f.key==='__IMAGE__'){
-      const arr=Array.isArray(v)?v:[v];
-      if(arr.length){
-        data=data.filter(r=>{
-          if(arr.includes('Com imagem')&&arr.includes('Sem imagem')) return true;
-          if(arr.includes('Com imagem')) return !!r.__img;
-          if(arr.includes('Sem imagem')) return !r.__img;
-          return true;
-        });
-      }
-      return;
-    }
-    if(f.key==='__YEAR__'){
-      const arr=Array.isArray(v)?v:[v];
-      if(arr.length) data=data.filter(r=>arr.includes(r.__year));
-      return;
-    }
-
     if(f.type==='ms'){
       const arr=Array.isArray(v)?v:[v];
       if(arr.length) data=data.filter(r=>arr.includes(String(r[f.key]||'').trim()));
-      return;
-    }
-    if(f.type==='date'){
-      const {from,to}=v;
-      if(from) data=data.filter(r=>{ const d=asDate(r[f.key]); return d&&d>=new Date(from); });
-      if(to)   data=data.filter(r=>{ const d=asDate(r[f.key]); return d&&d<=new Date(to+'T23:59:59'); });
-      return;
-    }
-    if(f.type==='text'){
-      data=data.filter(r=>String(r[f.key]||'').toLowerCase().includes(v.toLowerCase()));
-      return;
     }
   });
 
@@ -865,19 +928,21 @@ function renderKpis(){
 
 // ── Render chips ─────────────────────────────────────────────────
 function renderChips(){
+  // chips bar removed from HTML, skip silently
   const bar=document.getElementById('chipsBar');
+  if(!bar) return;
   const chips=[];
   const q=document.getElementById('globalSearch').value.trim();
   if(q) chips.push({key:'__global__',label:`Busca: ${q}`});
-
-  FILTERS.forEach(f=>{
-    const v=S.filters[f.key];
-    if(!v) return;
-    if(Array.isArray(v)&&v.length){ chips.push({key:f.key,label:`${f.label}: ${v.length>2?v.length+' itens':v.join(', ')}`}); }
-    else if(v&&typeof v==='object'){ const{from,to}=v; if(from||to) chips.push({key:f.key,label:`${f.label}: ${from||'...'} → ${to||'...'}`}); }
-    else if(typeof v==='string'&&v) chips.push({key:f.key,label:`${f.label}: ${v}`});
+  const yVal=document.getElementById('yearSel')?.value;
+  if(yVal) chips.push({key:'__year__',label:`Ano: ${yVal}`});
+  Object.entries(S.colFilters||{}).forEach(([k,v])=>{
+    if(!v||!v.length) return;
+    const def=colDef(k);
+    const lbl=def?.label||k;
+    if(Array.isArray(v)&&v.length) chips.push({key:k,label:`${lbl}: ${v.length>2?v.length+' itens':v.join(', ')}`});
+    else if(v&&typeof v==='object'){const{from,to}=v;if(from||to) chips.push({key:k,label:`${lbl}: ${from||'...'} → ${to||'...'}`});}
   });
-
   bar.innerHTML = chips.map(c=>`
     <span class="chip">${esc(c.label)}<button data-chip="${esc(c.key)}" title="Remover">×</button></span>
   `).join('');
@@ -894,15 +959,21 @@ function renderTable(){
   const start=(S.page-1)*S.pageSize;
   const rows=S.filtered.slice(start,start+S.pageSize);
 
+  // build active column filter keys set for icon highlight
+  const activeCF = new Set(Object.keys(S.colFilters||{}).filter(k=>S.colFilters[k]?.length));
+
   const thead=`<thead><tr>
     ${vcols.map((c,i)=>`<th class="${S.sort.key===c.key?'sort-active':''}" data-col-idx="${i}" style="${S.colWidths&&S.colWidths[c.key]?'width:'+S.colWidths[c.key]+'px;min-width:'+S.colWidths[c.key]+'px;':''}">
-      <div class="th-inner"><button class="sort-btn" data-sort="${esc(c.key)}">${esc(c.label)}${S.sort.key===c.key?(S.sort.dir==='asc'?' ↑':' ↓'):''}</button></div>
+      <div class="th-inner">
+        <button class="sort-btn" data-sort="${esc(c.key)}">${esc(c.label)}${S.sort.key===c.key?(S.sort.dir==='asc'?' ↑':' ↓'):''}</button>
+        <button class="col-filter-btn ${activeCF.has(c.key)?'active':''}" data-colfilt="${esc(c.key)}" title="Filtrar ${esc(c.label)}">▾</button>
+      </div>
       <div class="col-resizer" data-resize-col="${esc(c.key)}"></div>
     </th>`).join('')}
     <th style="width:36px;min-width:36px;"><div class="th-inner">Img</div></th>
   </tr></thead>`;
 
-  const tbody=`<tbody>${rows.map(row=>`<tr>
+  const tbody=`<tbody>${rows.map(row=>`<tr data-row-id="${row.__id}" class="${S.selectedRowId===row.__id?'selected':''}">
     ${vcols.map(c=>renderCell(row,c)).join('')}
     <td>${row.__img?`<button class="img-btn" data-pid="${row.__id}">ver</button>`:`<span style="color:var(--muted);font-size:0.65rem;">—</span>`}</td>
   </tr>`).join('')}</tbody>`;
@@ -919,7 +990,7 @@ function renderCell(row,col){
     if(!v||v==='') return `<td><span class="badge empty">—</span></td>`;
     return `<td><span class="badge ${statusClass(v)}">${esc(v)}</span></td>`;
   }
-  if(col.key==='NOME FANTASIA') return `<td><div class="col-name" title="${esc(v)}">${esc(v||'—')}</div></td>`;
+  if(col.key==='NOME FANTASIA') return `<td style="text-align:left"><span class="col-name" title="${esc(v)}">${esc(v||'—')}</span></td>`;
   if(col.key==='REFERENCIA') return `<td class="col-ref">${esc(v||'—')}</td>`;
   return `<td>${esc(v||'—')}</td>`;
 }
@@ -977,6 +1048,7 @@ async function loadData(){
     const buf=await res.arrayBuffer();
     const wb=XLSX.read(buf,{type:'array',cellDates:true});
     S.raw=parseXlsx(wb);
+    buildYearSelect();
     buildFilterBar();
     applyFilters();
     renderAll();
@@ -1000,10 +1072,6 @@ function applyUiPrefs(){
   const kpis=document.getElementById('kpisRow');
   if(S.ui.kpisHidden) kpis.classList.add('hidden');
   else kpis.classList.remove('hidden');
-  const fb=document.getElementById('filterBar');
-  if(S.ui.filtersOpen) fb.classList.remove('collapsed');
-  else fb.classList.add('collapsed');
-  document.getElementById('btnToggleFilters').classList.toggle('active',S.ui.filtersOpen);
   document.getElementById('btnToggleKpis').classList.toggle('active',!S.ui.kpisHidden);
 }
 
@@ -1012,10 +1080,17 @@ function applyUiPrefs(){
 const gSearch=document.getElementById('globalSearch');
 gSearch.addEventListener('input', debounce(applyAndRender, 200));
 
+// Year select - populate after data loads, handle change
+function buildYearSelect(){
+  const sel=document.getElementById('yearSel');
+  if(!sel) return;
+  const years=[...new Set(S.raw.map(r=>r.__year).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
+  const cur=sel.value;
+  sel.innerHTML=`<option value="">Todos os anos</option>`+years.map(y=>`<option value="${y}" ${y===cur?'selected':''}>${y}</option>`).join('');
+}
+document.getElementById('yearSel')?.addEventListener('change', applyAndRender);
+
 // Topbar buttons
-document.getElementById('btnToggleFilters').addEventListener('click',()=>{
-  S.ui.filtersOpen=!S.ui.filtersOpen; applyUiPrefs(); savePrefs();
-});
 document.getElementById('btnToggleKpis').addEventListener('click',()=>{
   S.ui.kpisHidden=!S.ui.kpisHidden; applyUiPrefs(); savePrefs();
 });
@@ -1054,8 +1129,25 @@ colPanel.addEventListener('change',(e)=>{
   savePrefs(); renderTable();
 });
 
-// Table events (sort, image, pagination)
+// Table events (sort, image, pagination, row selection, col filter)
 document.addEventListener('click',(e)=>{
+  // Column filter button
+  const cfBtn=e.target.closest('[data-colfilt]');
+  if(cfBtn){ openColFilter(cfBtn); return; }
+
+  // Row selection (click on tr, not on buttons)
+  const tr=e.target.closest('tbody tr');
+  if(tr && !e.target.closest('button')){
+    if(tr.dataset.rowId){
+      const id=Number(tr.dataset.rowId);
+      if(S.selectedRowId===id){ S.selectedRowId=null; tr.classList.remove('selected'); }
+      else {
+        document.querySelectorAll('tr.selected').forEach(r=>r.classList.remove('selected'));
+        S.selectedRowId=id; tr.classList.add('selected');
+      }
+    }
+    return;
+  }
   // Sort
   const sb=e.target.closest('[data-sort]');
   if(sb){
@@ -1162,6 +1254,106 @@ document.getElementById('modalBackdrop').addEventListener('click',closeModal);
     document.body.style.userSelect='';
   });
 })();
+
+// ── Column filter panel ───────────────────────────────────────────
+let _cfpKey = null;
+const cfpEl = document.getElementById('colFilterPanel');
+
+function openColFilter(btn){
+  const key = btn.dataset.colfilt;
+  _cfpKey = key;
+  const def = colDef(key);
+  document.getElementById('cfpTitle').textContent = `Filtrar: ${def?.label||key}`;
+
+  // Position panel below the button
+  const rect = btn.getBoundingClientRect();
+  cfpEl.style.top = (rect.bottom + 4 + window.scrollY) + 'px';
+  cfpEl.style.left = Math.min(rect.left, window.innerWidth - 290) + 'px';
+
+  // Build body
+  const body = document.getElementById('cfpBody');
+  body.innerHTML='';
+
+  if(def?.type==='date'){
+    // Month range
+    const cur = S.colFilters[key]||{};
+    // extract YYYY-MM from stored YYYY-MM-DD
+    const fromM = cur.from ? cur.from.slice(0,7) : '';
+    const toM   = cur.to   ? cur.to.slice(0,7)   : '';
+    const div = document.createElement('div');
+    div.className='cfp-month';
+    div.innerHTML=`
+      <label>De</label><input type="month" id="cfpFrom" value="${fromM}">
+      <label>Até</label><input type="month" id="cfpTo" value="${toM}">
+    `;
+    body.appendChild(div);
+  } else {
+    // Multi-select list
+    const allVals = [...new Set(S.raw.map(r=>String(r[key]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    const sel = S.colFilters[key]||[];
+
+    const srchDiv = document.createElement('div');
+    srchDiv.className='cfp-search';
+    srchDiv.innerHTML=`<input type="text" id="cfpSrch" placeholder="Buscar...">`;
+    body.appendChild(srchDiv);
+
+    const listDiv = document.createElement('div');
+    listDiv.className='cfp-list';
+    listDiv.id='cfpList';
+    body.appendChild(listDiv);
+
+    function renderOpts(q=''){
+      const filtered = q ? allVals.filter(v=>v.toLowerCase().includes(q.toLowerCase())) : allVals;
+      if(!filtered.length){ listDiv.innerHTML=`<div class="cfp-empty">Sem opções</div>`; return; }
+      listDiv.innerHTML = filtered.map(v=>`
+        <label class="cfp-option">
+          <input type="checkbox" value="${esc(v)}" ${sel.includes(v)?'checked':''}>
+          <span title="${esc(v)}">${esc(v)}</span>
+        </label>
+      `).join('');
+    }
+    renderOpts();
+    document.getElementById('cfpSrch').addEventListener('input',e=>renderOpts(e.target.value));
+  }
+
+  cfpEl.classList.add('open');
+  e?.stopPropagation?.();
+}
+
+function closeColFilter(){ cfpEl.classList.remove('open'); _cfpKey=null; }
+
+document.getElementById('cfpClose').addEventListener('click', closeColFilter);
+document.addEventListener('click',(e)=>{
+  if(!cfpEl.contains(e.target) && !e.target.closest('[data-colfilt]')) closeColFilter();
+});
+
+document.getElementById('cfpClear').addEventListener('click',()=>{
+  if(!_cfpKey) return;
+  delete S.colFilters[_cfpKey];
+  closeColFilter();
+  applyAndRender();
+});
+
+document.getElementById('cfpApply').addEventListener('click',()=>{
+  if(!_cfpKey) return;
+  const def = colDef(_cfpKey);
+  if(def?.type==='date'){
+    const from = document.getElementById('cfpFrom')?.value;
+    const to   = document.getElementById('cfpTo')?.value;
+    if(from||to){
+      S.colFilters[_cfpKey] = {
+        from: from ? from+'-01' : '',
+        to:   to   ? lastDayOfMonth(to) : ''
+      };
+    } else { delete S.colFilters[_cfpKey]; }
+  } else {
+    const checked = [...document.querySelectorAll('#cfpList input[type=checkbox]:checked')].map(cb=>cb.value);
+    if(checked.length) S.colFilters[_cfpKey]=checked;
+    else delete S.colFilters[_cfpKey];
+  }
+  closeColFilter();
+  applyAndRender();
+});
 
 // ── Init ──────────────────────────────────────────────────────────
 loadPrefs();
