@@ -86,19 +86,6 @@
     .tb-btn.primary{background:var(--primary);border-color:var(--primary);color:#fff;}
     .tb-btn.primary:hover{background:#1e2bb8;}
 
-    /* Font size picker inline */
-    .fs-picker {
-      display:inline-flex;align-items:center;gap:2px;
-      background:var(--surface);border:1.5px solid var(--line);
-      border-radius:7px;padding:3px 4px;
-    }
-    .fs-btn {
-      padding:2px 6px;border-radius:5px;font-size:0.7rem;font-weight:700;
-      color:var(--muted);transition:all 0.1s;
-    }
-    .fs-btn:hover{background:var(--surface2);color:var(--text);}
-    .fs-btn.active{background:var(--primary);color:#fff;}
-
     .tb-sep{width:1px;height:20px;background:var(--line);margin:0 2px;flex-shrink:0;}
 
     /* ── FILTER BAR ── */
@@ -233,29 +220,45 @@
     }
     th {
       font-size:var(--th);font-weight:700;text-transform:uppercase;
-      letter-spacing:0.04em;color:var(--muted);
-      border-bottom:2px solid var(--line);border-right:1px solid var(--line);
+      letter-spacing:0.04em;color:#3a4070;
+      background:linear-gradient(180deg,#e8ecf8 0%,#dde3f4 100%);
+      border-bottom:2px solid #b8c2e0;border-right:1px solid #c8d0e8;
       padding:var(--tp);white-space:nowrap;
+      text-align:center;
+      position:relative; /* for resize handle */
+      overflow:hidden;
     }
     th:last-child{border-right:none;}
+    th .th-inner{display:flex;align-items:center;justify-content:center;gap:3px;}
     th button.sort-btn{
       background:none;border:none;cursor:pointer;
       font:inherit;font-size:var(--th);font-weight:700;
       text-transform:uppercase;letter-spacing:0.04em;
-      color:var(--muted);display:flex;align-items:center;gap:3px;
+      color:#3a4070;display:flex;align-items:center;gap:3px;
     }
     th button.sort-btn:hover{color:var(--primary);}
+    th.sort-active{background:linear-gradient(180deg,#d4d9f5 0%,#c4ccf0 100%);}
     th.sort-active button.sort-btn{color:var(--primary);}
+    /* Resize handle */
+    .col-resizer {
+      position:absolute;right:0;top:0;bottom:0;
+      width:5px;cursor:col-resize;
+      background:transparent;z-index:5;
+      transition:background 0.15s;
+    }
+    .col-resizer:hover,.col-resizer.resizing{background:var(--primary);}
     td {
       padding:var(--tp);border-bottom:1px solid var(--line);
       border-right:1px solid var(--line);vertical-align:middle;
+      text-align:center;
     }
     td:last-child{border-right:none;}
     tr:hover td{background:rgba(40,54,212,0.03);}
     .col-num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
-    .col-date{white-space:nowrap;color:var(--muted);}
-    .col-name{font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-    .col-ref{font-weight:600;color:var(--primary);}
+    .col-date{white-space:nowrap;color:var(--muted);text-align:center;}
+    .col-name{font-weight:600;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;}
+    .col-ref{font-weight:600;color:var(--primary);text-align:center;}
+    td:has(.col-name){text-align:left;}
 
     /* Badges */
     .badge {
@@ -394,14 +397,14 @@
   <div class="tb-sep"></div>
 
   <!-- Font size picker -->
-  <div class="fs-picker" title="Tamanho da fonte da tabela">
-    <button class="fs-btn" data-fs="fs-2xs">2xs</button>
-    <button class="fs-btn" data-fs="fs-xs">xs</button>
-    <button class="fs-btn active" data-fs="fs-sm">s</button>
-    <button class="fs-btn" data-fs="fs-md">m</button>
-    <button class="fs-btn" data-fs="fs-lg">l</button>
-    <button class="fs-btn" data-fs="fs-xl">xl</button>
-  </div>
+  <select id="fsSel" class="pg-select" title="Tamanho da fonte da tabela" style="font-size:0.75rem;padding:4px 6px;">
+    <option value="fs-2xs">Fonte 2XS</option>
+    <option value="fs-xs">Fonte XS</option>
+    <option value="fs-sm" selected>Fonte S</option>
+    <option value="fs-md">Fonte M</option>
+    <option value="fs-lg">Fonte L</option>
+    <option value="fs-xl">Fonte XL</option>
+  </select>
 </div>
 
 <!-- COLUMNS PANEL (floating) -->
@@ -477,27 +480,15 @@ const COLS = [
 
 // Filter fields config: select=multi-select, date=range, text=text input
 const FILTERS = [
-  { key:'FILIAL',        label:'Filial',      type:'ms'   },
-  { key:'MARCA',         label:'Marca',       type:'ms'   },
-  { key:'FABRICA',       label:'Fábrica',     type:'ms'   },
-  { key:'NOME FANTASIA', label:'Cliente',     type:'ms'   },
-  { key:'PORTA',         label:'Porta',       type:'ms'   },
-  { key:'COR',           label:'Cor',         type:'ms'   },
-  { key:'STATUS 1',      label:'Status 1',    type:'ms'   },
-  { key:'STATUS 2',      label:'Status 2',    type:'ms'   },
-  { key:'STATUS 3',      label:'Status 3',    type:'ms'   },
-  { key:'__YEAR__',      label:'Ano',         type:'ms'   },
-  { key:'PREV FAT',      label:'Prev.Fat',    type:'date' },
-  { key:'DATA FAT',      label:'Data Fat',    type:'date' },
-  { key:'REFERENCIA',    label:'Referência',  type:'text' },
-  { key:'GCI',           label:'GCI',         type:'text' },
-  { key:'__IMAGE__',     label:'Imagem',      type:'ms', options:['Com imagem','Sem imagem'] },
+  { key:'PREV FAT',      label:'Prev.Fat',    type:'month' },
+  { key:'DATA FAT',      label:'Data Fat',    type:'month' },
 ];
 
 // ── State ───────────────────────────────────────────────────────
 const S = {
   raw:[], filtered:[],
   visibleCols: new Set(),
+  colWidths: {}, // key -> px width
   // filters: { key: [] for ms, {from,to} for date, string for text }
   filters: {},
   sort: { key:'PREV FAT', dir:'asc' },
@@ -573,17 +564,16 @@ function buildFilterBar(){
     wrap.appendChild(lbl);
 
     if(f.type === 'ms'){
-      // Build options from data
       let opts = f.options ? f.options : (() => {
         if(f.key==='__YEAR__') return [...new Set(S.raw.map(r=>r.__year).filter(Boolean))].sort((a,b)=>b.localeCompare(a));
-        if(f.key==='__IMAGE__') return ['Com imagem','Sem imagem'];
         return [...new Set(S.raw.map(r=>String(r[f.key]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
       })();
       optsCache[f.key] = opts;
       wrap.appendChild(buildMultiSelect(f.key, opts));
     } else if(f.type === 'date'){
-      const dr = buildDateRange(f.key);
-      wrap.appendChild(dr);
+      wrap.appendChild(buildDateRange(f.key));
+    } else if(f.type === 'month'){
+      wrap.appendChild(buildMonthRange(f.key));
     } else {
       const inp = document.createElement('input');
       inp.type='text'; inp.className='filter-input';
@@ -601,7 +591,6 @@ function buildFilterBar(){
     }
     bar.appendChild(wrap);
   });
-  // Apply saved filter values to UI after build
   syncFilterUI();
 }
 
@@ -689,7 +678,6 @@ function buildDateRange(key){
   const toI = document.createElement('input');
   toI.type='date'; toI.dataset.drTo=key;
 
-  // Restore saved
   const cur=S.filters[key];
   if(cur&&typeof cur==='object'){
     if(cur.from) fromI.value=cur.from;
@@ -708,6 +696,51 @@ function buildDateRange(key){
 
   wrap.appendChild(fromI); wrap.appendChild(sep); wrap.appendChild(toI);
   return wrap;
+}
+
+function buildMonthRange(key){
+  const wrap = document.createElement('div');
+  wrap.className = 'date-range';
+  wrap.dataset.drKey = key;
+
+  const fromI = document.createElement('input');
+  fromI.type='month'; fromI.dataset.drFrom=key;
+  fromI.style.width='130px';
+  const sep = document.createElement('span');
+  sep.textContent='→';
+  const toI = document.createElement('input');
+  toI.type='month'; toI.dataset.drTo=key;
+  toI.style.width='130px';
+
+  const cur=S.filters[key];
+  if(cur&&typeof cur==='object'){
+    if(cur.from) fromI.value=cur.from;
+    if(cur.to) toI.value=cur.to;
+    if(cur.from||cur.to) wrap.classList.add('has-value');
+  }
+
+  function onChange(){
+    // month input value = "YYYY-MM", convert to date range
+    const from=fromI.value, to=toI.value;
+    if(from||to){
+      // store as-is, interpret in filter logic
+      S.filters[key]={from: from ? from+'-01' : '', to: to ? lastDayOfMonth(to) : ''};
+      wrap.classList.add('has-value');
+    } else {
+      delete S.filters[key]; wrap.classList.remove('has-value');
+    }
+    applyAndRender();
+  }
+  fromI.addEventListener('change',onChange);
+  toI.addEventListener('change',onChange);
+
+  wrap.appendChild(fromI); wrap.appendChild(sep); wrap.appendChild(toI);
+  return wrap;
+}
+
+function lastDayOfMonth(ym){ // ym = "YYYY-MM"
+  const [y,m]=ym.split('-').map(Number);
+  return new Date(y,m,0).toISOString().slice(0,10);
 }
 
 function syncFilterUI(){
@@ -862,10 +895,11 @@ function renderTable(){
   const rows=S.filtered.slice(start,start+S.pageSize);
 
   const thead=`<thead><tr>
-    ${vcols.map(c=>`<th class="${S.sort.key===c.key?'sort-active':''}">
-      <button class="sort-btn" data-sort="${esc(c.key)}">${esc(c.label)} ${S.sort.key===c.key?(S.sort.dir==='asc'?'↑':'↓'):''}</button>
+    ${vcols.map((c,i)=>`<th class="${S.sort.key===c.key?'sort-active':''}" data-col-idx="${i}" style="${S.colWidths&&S.colWidths[c.key]?'width:'+S.colWidths[c.key]+'px;min-width:'+S.colWidths[c.key]+'px;':''}">
+      <div class="th-inner"><button class="sort-btn" data-sort="${esc(c.key)}">${esc(c.label)}${S.sort.key===c.key?(S.sort.dir==='asc'?' ↑':' ↓'):''}</button></div>
+      <div class="col-resizer" data-resize-col="${esc(c.key)}"></div>
     </th>`).join('')}
-    <th>Img</th>
+    <th style="width:36px;min-width:36px;"><div class="th-inner">Img</div></th>
   </tr></thead>`;
 
   const tbody=`<tbody>${rows.map(row=>`<tr>
@@ -961,9 +995,8 @@ function applyUiPrefs(){
   const fsSizes=['fs-2xs','fs-xs','fs-sm','fs-md','fs-lg','fs-xl'];
   document.body.classList.remove(...fsSizes);
   document.body.classList.add(S.ui.fontSize||'fs-sm');
-  document.querySelectorAll('.fs-btn').forEach(b=>{
-    b.classList.toggle('active',b.dataset.fs===S.ui.fontSize);
-  });
+  const fsSel=document.getElementById('fsSel');
+  if(fsSel) fsSel.value=S.ui.fontSize||'fs-sm';
   const kpis=document.getElementById('kpisRow');
   if(S.ui.kpisHidden) kpis.classList.add('hidden');
   else kpis.classList.remove('hidden');
@@ -994,12 +1027,13 @@ document.getElementById('btnClearAll').addEventListener('click',()=>{
   applyAndRender();
 });
 
-// Font size
-document.querySelectorAll('.fs-btn').forEach(b=>{
-  b.addEventListener('click',()=>{
-    S.ui.fontSize=b.dataset.fs; applyUiPrefs(); savePrefs();
+// Font size select
+const fsSel=document.getElementById('fsSel');
+if(fsSel){
+  fsSel.addEventListener('change',()=>{
+    S.ui.fontSize=fsSel.value; applyUiPrefs(); savePrefs();
   });
-});
+}
 
 // Columns panel toggle
 const colPanel=document.getElementById('columnsPanel');
@@ -1095,6 +1129,39 @@ function closeModal(){
 }
 document.getElementById('btnCloseModal').addEventListener('click',closeModal);
 document.getElementById('modalBackdrop').addEventListener('click',closeModal);
+
+// ── Column resize ─────────────────────────────────────────────────
+(function setupColResize(){
+  let resizing=null; // {th, colKey, startX, startW}
+  document.addEventListener('mousedown',(e)=>{
+    const handle=e.target.closest('.col-resizer');
+    if(!handle) return;
+    e.preventDefault();
+    const th=handle.closest('th');
+    const colKey=handle.dataset.resizeCol;
+    const startX=e.clientX;
+    const startW=th.offsetWidth;
+    handle.classList.add('resizing');
+    resizing={th,colKey,startX,startW};
+    document.body.style.cursor='col-resize';
+    document.body.style.userSelect='none';
+  });
+  document.addEventListener('mousemove',(e)=>{
+    if(!resizing) return;
+    const delta=e.clientX-resizing.startX;
+    const newW=Math.max(40, resizing.startW+delta);
+    resizing.th.style.width=newW+'px';
+    resizing.th.style.minWidth=newW+'px';
+    S.colWidths[resizing.colKey]=newW;
+  });
+  document.addEventListener('mouseup',()=>{
+    if(!resizing) return;
+    resizing.th.querySelector('.col-resizer')?.classList.remove('resizing');
+    resizing=null;
+    document.body.style.cursor='';
+    document.body.style.userSelect='';
+  });
+})();
 
 // ── Init ──────────────────────────────────────────────────────────
 loadPrefs();
