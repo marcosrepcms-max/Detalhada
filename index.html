@@ -269,8 +269,11 @@
 
     /* Table shell */
     #tableWrap {
-      flex:1;overflow:auto;
-      /* must NOT have position:relative for sticky thead to work */
+      flex:1;
+      min-height:240px;
+      height:calc(100vh - 220px);
+      overflow:auto;
+      /* tableWrap precisa ser o scroll container real para o sticky do cabeçalho funcionar */
     }
     table {
       width:100%;border-collapse:separate;border-spacing:0;font-size:var(--ts);
@@ -1062,6 +1065,7 @@ function renderAll(){
   renderChips();
   renderTable();
   renderPagination();
+  requestAnimationFrame(syncStickyTableLayout);
 }
 
 // ── Load data ─────────────────────────────────────────────────────
@@ -1102,6 +1106,23 @@ function applyUiPrefs(){
     else kpisEl2.classList.remove('hidden');
   }
   document.getElementById('btnToggleKpis')?.classList.toggle('active',!S.ui.kpisHidden);
+}
+
+
+// ── Sticky layout sync ────────────────────────────────────────────
+function syncStickyTableLayout(){
+  const topbar=document.getElementById('topbar');
+  const tw=document.getElementById('tableWrap');
+  const pb=document.getElementById('paginationBar');
+  if(topbar){
+    document.documentElement.style.setProperty('--topbar-h', topbar.offsetHeight + 'px');
+  }
+  if(!tw) return;
+  const rect=tw.getBoundingClientRect();
+  const pbVisible=pb && getComputedStyle(pb).display!=='none';
+  const pbH=pbVisible ? pb.offsetHeight : 0;
+  const available=Math.max(220, window.innerHeight - rect.top - pbH - 8);
+  tw.style.height = available + 'px';
 }
 
 // ── Events ────────────────────────────────────────────────────────
@@ -1404,6 +1425,7 @@ loadPrefs();
 initCols();
 buildColumnsPanel();
 applyUiPrefs();
+window.addEventListener('resize', ()=>requestAnimationFrame(syncStickyTableLayout));
 loadData();
 </script>
 </body>
