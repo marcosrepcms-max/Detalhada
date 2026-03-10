@@ -504,13 +504,13 @@
 
     /* ── IMAGE MODAL ── */
     #modalBackdrop {
-      position:fixed;inset:0;z-index:80;background:rgba(0,0,0,0.5);
+      position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.5);
       display:none;
     }
     #modalBackdrop.open{display:block;}
     #imageModal {
       position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-      z-index:90;background:var(--surface);border-radius:14px;
+      z-index:210;background:var(--surface);border-radius:14px;
       box-shadow:0 20px 60px rgba(0,0,0,0.2);
       width:min(820px,calc(100vw - 24px));max-height:90vh;
       overflow:auto;display:none;flex-direction:column;
