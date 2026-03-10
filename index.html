@@ -609,10 +609,13 @@
     .am-month-chip.today.active{background:var(--ok);border-color:var(--ok);color:#fff;}
     /* Period pill shown when collapsed */
     .am-period-pill{
-      display:none;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;
+      padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;
       background:rgba(14,162,113,0.12);color:var(--ok);border:1.5px solid var(--ok);
+      display:none;
     }
-    .am-search-bar.collapsed .am-period-pill.has-period{ display:inline-flex; }
+    .am-period-pill.has-period{ display:inline-flex;align-items:center;gap:4px; }
+    /* When NOT collapsed and pill has period, show it alongside ref */
+    .am-search-bar:not(.collapsed) .am-period-pill.has-period{ display:inline-flex; }
     /* Toggle filters button */
     .am-toggle-filters{
       margin-left:auto;display:inline-flex;align-items:center;gap:5px;
@@ -628,7 +631,7 @@
       display:none;padding:3px 10px;border-radius:20px;font-size:0.74rem;font-weight:700;
       background:var(--primary-soft);color:var(--primary);border:1.5px solid var(--primary);
     }
-    .am-search-bar.collapsed .am-ref-pill{ display:inline-flex;align-items:center;gap:6px; }
+    .am-ref-pill.has-ref{ display:inline-flex;align-items:center;gap:6px; }
     /* Clear modal filters button */
     .am-clear-btn{
       display:inline-flex;align-items:center;gap:5px;
@@ -722,7 +725,31 @@
     table.am-table tbody tr:hover td{background:var(--row-hover-bg);}
     .am-risk-row td{background:rgba(220,38,38,0.04)!important;}
     .am-risk-row:hover td{background:rgba(220,38,38,0.09)!important;}
-    /* Empty / loading states */
+    /* Image preview inside analysis modal */
+    .am-img-btn{
+      width:28px;height:28px;border-radius:6px;
+      border:1.5px solid var(--line);background:var(--surface2);
+      display:inline-flex;align-items:center;justify-content:center;
+      cursor:pointer;transition:all 0.15s;color:var(--muted);font-size:0.7rem;
+      flex-shrink:0;
+    }
+    .am-img-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft);}
+    .am-img-btn.no-img{opacity:0.3;cursor:default;pointer-events:none;}
+    /* Floating image tooltip */
+    #amImgPreview{
+      position:fixed;z-index:500;
+      background:var(--surface);border:1.5px solid var(--line);
+      border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.25);
+      padding:8px;width:200px;
+      display:none;pointer-events:none;
+      transition:opacity 0.15s;
+    }
+    #amImgPreview.show{display:block;}
+    #amImgPreview img{width:100%;border-radius:8px;display:block;}
+    #amImgPreview .am-preview-label{
+      font-size:0.65rem;font-weight:700;color:var(--muted);
+      text-align:center;margin-top:6px;text-transform:uppercase;letter-spacing:0.05em;
+    }
     .am-empty{
       display:flex;flex-direction:column;align-items:center;justify-content:center;
       padding:48px 24px;gap:12px;color:var(--muted);text-align:center;
@@ -959,6 +986,7 @@
     </div>
   </div>
 </div>
+<div id="amImgPreview"><img id="amImgPreviewImg" src="" alt=""/><div class="am-preview-label" id="amImgPreviewLabel"></div></div>
 
 <script>
 const XLSX_PATH = './DETALHADA.xlsx';
@@ -1954,7 +1982,7 @@ function openAnalise(){
     AMBackdrop.classList.add('open');
     requestAnimationFrame(()=> AMBackdrop.classList.add('visible'));
   });
-  if(S.raw.length){ amBuildMonthChips(); amBuildRisco(); }
+  if(S.raw.length){ amBuildMonthChips(true); amBuildRisco(); }
 }
 function closeAnalise(){
   AMBackdrop.classList.remove('visible');
@@ -1973,7 +2001,7 @@ document.querySelectorAll('.am-tab').forEach(tab=>{
     tab.classList.add('active');
     const id = 'am-'+tab.dataset.tab;
     document.getElementById(id)?.classList.add('active');
-    if(tab.dataset.tab==='risco' && S.raw.length){ amBuildMonthChips(); amBuildRisco(); }
+    if(tab.dataset.tab==='risco' && S.raw.length){ amBuildMonthChips(false); amBuildRisco(); }
   });
 });
 
@@ -1987,15 +2015,17 @@ document.getElementById('amToggleFilters')?.addEventListener('click',()=>{
 document.getElementById('amClearBtn')?.addEventListener('click',()=>{
   _amRef = ''; _amCor = ''; _amShowCandidatesOnly = false; _amMonth = '';
   if(amRefInput) amRefInput.value = '';
-  document.getElementById('amCorRow').innerHTML = '';
+  const refPill = document.getElementById('amRefPill');
+  if(refPill){ refPill.classList.remove('has-ref'); document.getElementById('amRefPillText').textContent='—'; }
   document.getElementById('amSummary').style.display = 'none';
   document.getElementById('amClearBtn').style.display = 'none';
   const pill = document.getElementById('amPeriodPill');
   if(pill){ pill.textContent=''; pill.classList.remove('has-period'); }
   const bar = document.getElementById('amSearchBar');
   if(bar) bar.classList.remove('collapsed');
-  // Reset month chips
-  amBuildMonthChips();
+  // Reset month chips (no auto-select on clear)
+  _amMonth = '';
+  amBuildMonthChips(false);
   document.getElementById('amResults').innerHTML = `<div class="am-empty"><div class="am-empty-icon">🔎</div><p>Digite uma referência para ver quem tem esse produto na carteira e identificar candidatos ao repasse.</p></div>`;
 });
 
@@ -2007,7 +2037,7 @@ let _amMonth = ''; // selected YYYY-MM period filter
 let _amRefs = [];  // autocomplete list [{ref, desc, count}]
 
 // Build month chips from data — next 12 months with data
-function amBuildMonthChips(){
+function amBuildMonthChips(autoSelectCurrent){
   const chips = document.getElementById('amMonthChips');
   if(!chips) return;
   // Collect unique YYYY-MM from PREV FAT
@@ -2018,8 +2048,25 @@ function amBuildMonthChips(){
   });
   const now = new Date();
   const thisYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  // Auto-select current month on first build if requested
+  if(autoSelectCurrent && !_amMonth){
+    _amMonth = thisYM;
+  }
   const sorted = [...monthSet].sort();
   const ptMonths = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  function updatePeriodPill(){
+    const pill = document.getElementById('amPeriodPill');
+    if(!pill) return;
+    if(_amMonth){
+      const [y,m] = _amMonth.split('-');
+      pill.textContent = `📅 ${ptMonths[+m-1]}/${y}`;
+      pill.classList.add('has-period');
+    } else {
+      pill.textContent=''; pill.classList.remove('has-period');
+    }
+  }
+
   chips.innerHTML = `<button class="am-month-chip ${!_amMonth?'active':''}" data-ym="">Todos</button>`
     + sorted.map(ym=>{
         const [y,m] = ym.split('-');
@@ -2027,23 +2074,16 @@ function amBuildMonthChips(){
         const isToday = ym===thisYM;
         return `<button class="am-month-chip ${isToday?'today':''} ${_amMonth===ym?'active':''}" data-ym="${ym}">${label}${isToday?' ●':''}</button>`;
       }).join('');
+
+  updatePeriodPill();
+
   chips.querySelectorAll('.am-month-chip').forEach(btn=>{
     btn.addEventListener('click',()=>{
       _amMonth = btn.dataset.ym;
       chips.querySelectorAll('.am-month-chip').forEach(b=>{
         b.classList.toggle('active', b.dataset.ym===_amMonth);
       });
-      // Update period pill
-      const pill = document.getElementById('amPeriodPill');
-      if(pill){
-        if(_amMonth){
-          const [y,m] = _amMonth.split('-');
-          pill.textContent = `${ptMonths[+m-1]}/${y}`;
-          pill.classList.add('has-period');
-        } else {
-          pill.textContent=''; pill.classList.remove('has-period');
-        }
-      }
+      updatePeriodPill();
       amRenderCobertura();
       // Also refresh risco if that tab is active
       if(document.getElementById('am-risco')?.classList.contains('active')) amBuildRisco();
@@ -2115,8 +2155,9 @@ function amSelectRef(ref){
   amRefInput.value = ref;
   amRefDropdown.classList.remove('open');
   // Update pill
-  const pill = document.getElementById('amRefPillText');
-  if(pill) pill.textContent = ref;
+  const pill = document.getElementById('amRefPill');
+  const pillText = document.getElementById('amRefPillText');
+  if(pill && pillText){ pillText.textContent = ref; pill.classList.add('has-ref'); }
   // Show clear button
   const clearBtn = document.getElementById('amClearBtn');
   if(clearBtn) clearBtn.style.display = '';
@@ -2247,6 +2288,7 @@ function amRenderCobertura(){
   });
 
   const tableHead = `<thead><tr>
+    <th style="width:36px"></th>
     <th>Cliente</th><th>Filial</th><th>Referência</th><th>Cor</th>
     <th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th>
   </tr></thead>`;
@@ -2258,6 +2300,7 @@ function amRenderCobertura(){
       return;
     }
     const candidateRows = candidates.map(c=> `<tr>
+      <td></td>
       <td><strong>${esc(c)}</strong></td>
       <td colspan="5" style="color:var(--muted);font-style:italic">Não possui esse produto — candidato ao repasse</td>
       <td></td>
@@ -2281,7 +2324,12 @@ function amRenderCobertura(){
   const coverRows = sortedRows.map(r=>{
     const risk = amRowRisk(r);
     const rClass = risk==='danger' ? 'am-risk-row' : '';
+    const imgSrc = r.__img || '';
+    const imgBtn = imgSrc
+      ? `<button class="am-img-btn" data-img="${esc(imgSrc)}" data-label="${esc((r['REFERENCIA']||''))} ${esc(r['COR']||'')}">🖼</button>`
+      : `<button class="am-img-btn no-img" title="Sem imagem">🖼</button>`;
     return `<tr class="${rClass}">
+      <td style="text-align:center">${imgBtn}</td>
       <td><strong>${esc((r['NOME FANTASIA']||'—').trim())}</strong></td>
       <td>${esc(r['FILIAL']||'—')}</td>
       <td style="color:var(--primary);font-weight:700">${esc(r['REFERENCIA']||'—')}</td>
@@ -2293,6 +2341,7 @@ function amRenderCobertura(){
   }).join('');
 
   const candidateRows = candidates.slice(0,60).map(c=> `<tr>
+    <td></td>
     <td><strong>${esc(c)}</strong></td>
     <td colspan="5" style="color:var(--muted);font-style:italic">Não possui esse produto — candidato ao repasse</td>
     <td></td>
@@ -2400,7 +2449,12 @@ function amRenderRisco(risky){
   const rows = sorted.map(r=>{
     const risk = amRowRisk(r);
     const rClass = risk==='danger'?'am-risk-row':'';
+    const imgSrc = r.__img || '';
+    const imgBtn = imgSrc
+      ? `<button class="am-img-btn" data-img="${esc(imgSrc)}" data-label="${esc((r['REFERENCIA']||''))} ${esc(r['COR']||'')}">🖼</button>`
+      : `<button class="am-img-btn no-img" title="Sem imagem">🖼</button>`;
     return `<tr class="${rClass}">
+      <td style="text-align:center">${imgBtn}</td>
       <td><strong>${esc((r['NOME FANTASIA']||'—').trim())}</strong></td>
       <td>${esc(r['FILIAL']||'—')}</td>
       <td style="color:var(--primary);font-weight:700">${esc(r['REFERENCIA']||'—')}</td>
@@ -2415,6 +2469,7 @@ function amRenderRisco(risky){
     <div class="am-table-wrap">
       <table class="am-table">
         <thead><tr>
+          <th style="width:36px"></th>
           <th>Cliente</th><th>Filial</th><th>Referência</th><th>Cor</th>
           <th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th>
         </tr></thead>
@@ -2424,11 +2479,60 @@ function amRenderRisco(risky){
   `;
 }
 
+// ── Image preview inside analysis modal ───────────────────────────
+const amImgPreview = document.getElementById('amImgPreview');
+const amImgPreviewImg = document.getElementById('amImgPreviewImg');
+const amImgPreviewLabel = document.getElementById('amImgPreviewLabel');
+
+AMModal?.addEventListener('mouseover', e=>{
+  const btn = e.target.closest('.am-img-btn');
+  if(!btn || btn.classList.contains('no-img')) return;
+  const src = btn.dataset.img;
+  const label = btn.dataset.label || '';
+  amImgPreviewImg.src = src;
+  amImgPreviewImg.onerror = ()=>{ amImgPreview.style.display='none'; };
+  amImgPreviewLabel.textContent = label;
+  amImgPreview.style.display = 'block';
+  positionAmPreview(e);
+});
+
+AMModal?.addEventListener('mousemove', e=>{
+  if(e.target.closest('.am-img-btn') && amImgPreview.style.display==='block'){
+    positionAmPreview(e);
+  }
+});
+
+AMModal?.addEventListener('mouseout', e=>{
+  if(e.target.closest('.am-img-btn')){
+    amImgPreview.style.display = 'none';
+  }
+});
+
+AMModal?.addEventListener('click', e=>{
+  const btn = e.target.closest('.am-img-btn');
+  if(!btn || btn.classList.contains('no-img')) return;
+  amImgPreview.style.display = 'none';
+  // Find matching row in S.raw for full modal
+  const src = btn.dataset.img;
+  const row = S.raw.find(r=> r.__img === src);
+  if(row) openModal(row);
+});
+
+function positionAmPreview(e){
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const pw = 216, ph = 240;
+  let x = e.clientX + 16, y = e.clientY + 16;
+  if(x + pw > vw) x = e.clientX - pw - 8;
+  if(y + ph > vh) y = e.clientY - ph - 8;
+  amImgPreview.style.left = x + 'px';
+  amImgPreview.style.top  = y + 'px';
+}
+
 // Re-build reference list after data loads
 const _origLoadData = loadData;
 // Patch: after data loads, build ref list for autocomplete
 const _amDataObserver = setInterval(()=>{
-  if(S.raw.length){ amBuildRefList(); amBuildMonthChips(); clearInterval(_amDataObserver); }
+  if(S.raw.length){ amBuildRefList(); amBuildMonthChips(true); clearInterval(_amDataObserver); }
 }, 500);
 </script>
 </body>
