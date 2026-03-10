@@ -582,12 +582,39 @@
     /* Tab panels */
     .am-panel{display:none;flex:1;overflow:hidden;flex-direction:column;}
     .am-panel.active{display:flex;}
-    /* Search bar */
+    /* Search bar — collapsible */
     .am-search-bar{
       display:flex;align-items:center;gap:10px;
-      padding:14px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
-      flex-wrap:wrap;
+      padding:10px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
+      flex-wrap:wrap;transition:padding 0.2s;
     }
+    .am-search-bar.collapsed .am-autocomplete-wrap,
+    .am-search-bar.collapsed .am-cor-row{ display:none; }
+    .am-search-bar.collapsed{ padding:6px 18px; }
+    /* Toggle filters button */
+    .am-toggle-filters{
+      margin-left:auto;display:inline-flex;align-items:center;gap:5px;
+      padding:4px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;
+      border:1.5px solid var(--line);background:var(--surface);color:var(--muted);
+      cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;
+    }
+    .am-toggle-filters:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft);}
+    .am-toggle-filters svg{transition:transform 0.2s;}
+    .am-search-bar.collapsed .am-toggle-filters svg{transform:rotate(180deg);}
+    /* Collapsed state shows ref pill */
+    .am-ref-pill{
+      display:none;padding:3px 10px;border-radius:20px;font-size:0.74rem;font-weight:700;
+      background:var(--primary-soft);color:var(--primary);border:1.5px solid var(--primary);
+    }
+    .am-search-bar.collapsed .am-ref-pill{ display:inline-flex;align-items:center;gap:6px; }
+    /* Clear modal filters button */
+    .am-clear-btn{
+      display:inline-flex;align-items:center;gap:5px;
+      padding:4px 10px;border-radius:6px;font-size:0.7rem;font-weight:700;
+      border:1.5px solid var(--danger);background:transparent;color:var(--danger);
+      cursor:pointer;transition:all 0.15s;white-space:nowrap;flex-shrink:0;
+    }
+    .am-clear-btn:hover{background:var(--danger);color:#fff;}
     .am-autocomplete-wrap{position:relative;flex:1;min-width:200px;max-width:380px;}
     .am-autocomplete-wrap input{
       width:100%;padding:8px 12px;border-radius:8px;
@@ -632,9 +659,11 @@
     .am-stat{
       background:var(--surface);border:1px solid var(--line);border-radius:8px;
       padding:8px 14px;display:flex;flex-direction:column;gap:2px;min-width:120px;
-      transition:transform 0.15s,box-shadow 0.15s;
+      transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s;cursor:pointer;
     }
-    .am-stat:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(40,54,212,0.12);}
+    .am-stat:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(40,54,212,0.12);border-color:var(--primary);}
+    .am-stat.active{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 4px 14px rgba(40,54,212,0.18);}
+    .am-stat.active .am-stat-label{color:var(--primary);}
     .am-stat-label{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);}
     .am-stat-val{font-size:1.1rem;font-weight:800;color:var(--text);}
     .am-stat-val.ok{color:var(--ok);}
@@ -863,12 +892,23 @@
     </div>
     <!-- TAB COBERTURA -->
     <div class="am-panel active" id="am-cobertura">
-      <div class="am-search-bar">
+      <div class="am-search-bar" id="amSearchBar">
         <div class="am-autocomplete-wrap">
           <input id="amRefInput" type="text" placeholder="🔍  Digite a referência (ex: CORRE MAX)..." autocomplete="off"/>
           <div class="am-dropdown" id="amRefDropdown"></div>
         </div>
         <div class="am-cor-row" id="amCorRow"></div>
+        <span class="am-ref-pill" id="amRefPill">
+          <span id="amRefPillText">—</span>
+        </span>
+        <button class="am-clear-btn" id="amClearBtn" title="Limpar filtros do modal" style="display:none">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Limpar
+        </button>
+        <button class="am-toggle-filters" id="amToggleFilters" title="Ocultar/mostrar filtros">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>
+          Filtros
+        </button>
       </div>
       <div class="am-summary" id="amSummary" style="display:none"></div>
       <div class="am-results" id="amResults">
@@ -1849,9 +1889,37 @@ loadData();
 
 const AMBackdrop = document.getElementById('analiseBackdrop');
 const AMModal    = document.getElementById('analiseModal');
+let _amShowCandidatesOnly = false;
+
+// Font sync — apply the body font-size class to the modal
+function amSyncFont(){
+  const classes = ['fs-2xs','fs-xs','fs-sm','fs-md','fs-lg','fs-xl'];
+  const active = classes.find(c=> document.body.classList.contains(c)) || 'fs-sm';
+  classes.forEach(c=> AMModal?.classList.remove(c));
+  AMModal?.classList.add(active);
+}
+// Also apply CSS vars to modal via class (re-use body fs classes)
+const amFontStyle = document.createElement('style');
+amFontStyle.textContent = `
+  #analiseModal.fs-2xs { --ts:0.62rem; font-size:0.62rem; }
+  #analiseModal.fs-xs  { --ts:0.68rem; font-size:0.68rem; }
+  #analiseModal.fs-sm  { --ts:0.74rem; font-size:0.74rem; }
+  #analiseModal.fs-md  { --ts:0.82rem; font-size:0.82rem; }
+  #analiseModal.fs-lg  { --ts:0.92rem; font-size:0.92rem; }
+  #analiseModal.fs-xl  { --ts:1.02rem; font-size:1.02rem; }
+  #analiseModal table.am-table td, #analiseModal table.am-table th,
+  #analiseModal .am-stat-val, #analiseModal .am-stat-label,
+  #analiseModal .am-section-header, #analiseModal .am-dd-item { font-size:inherit; }
+`;
+document.head.appendChild(amFontStyle);
+
+// Watch font changes
+const fsSel2 = document.getElementById('fsSel');
+if(fsSel2) fsSel2.addEventListener('change', amSyncFont);
 
 // Open / close
 function openAnalise(){
+  amSyncFont();
   AMBackdrop.style.display = 'flex';
   requestAnimationFrame(()=>{
     AMBackdrop.classList.add('open');
@@ -1879,6 +1947,24 @@ document.querySelectorAll('.am-tab').forEach(tab=>{
     document.getElementById(id)?.classList.add('active');
     if(tab.dataset.tab==='risco' && S.raw.length) amBuildRisco();
   });
+});
+
+// Toggle filters (collapse/expand search bar)
+document.getElementById('amToggleFilters')?.addEventListener('click',()=>{
+  const bar = document.getElementById('amSearchBar');
+  if(bar) bar.classList.toggle('collapsed');
+});
+
+// Clear modal filters
+document.getElementById('amClearBtn')?.addEventListener('click',()=>{
+  _amRef = ''; _amCor = ''; _amShowCandidatesOnly = false;
+  if(amRefInput) amRefInput.value = '';
+  document.getElementById('amCorRow').innerHTML = '';
+  document.getElementById('amSummary').style.display = 'none';
+  document.getElementById('amClearBtn').style.display = 'none';
+  const bar = document.getElementById('amSearchBar');
+  if(bar) bar.classList.remove('collapsed');
+  document.getElementById('amResults').innerHTML = `<div class="am-empty"><div class="am-empty-icon">🔎</div><p>Digite uma referência para ver quem tem esse produto na carteira e identificar candidatos ao repasse.</p></div>`;
 });
 
 // ── TAB 1: COBERTURA & REPASSE ────────────────────────────────────
@@ -1947,8 +2033,15 @@ function amHighlightDd(items){
 function amSelectRef(ref){
   _amRef = ref;
   _amCor = '';
+  _amShowCandidatesOnly = false;
   amRefInput.value = ref;
   amRefDropdown.classList.remove('open');
+  // Update pill
+  const pill = document.getElementById('amRefPillText');
+  if(pill) pill.textContent = ref;
+  // Show clear button
+  const clearBtn = document.getElementById('amClearBtn');
+  if(clearBtn) clearBtn.style.display = '';
   amRenderCors();
   amRenderCobertura();
 }
@@ -1965,6 +2058,7 @@ function amRenderCors(){
   corRow.querySelectorAll('.am-cor-chip').forEach(btn=>{
     btn.addEventListener('click',()=>{
       _amCor = btn.dataset.cor;
+      _amShowCandidatesOnly = false;
       corRow.querySelectorAll('.am-cor-chip').forEach(b=>b.classList.toggle('active', b.dataset.cor===_amCor));
       amRenderCobertura();
     });
@@ -2023,16 +2117,57 @@ function amRenderCobertura(){
 
   summary.style.display='flex';
   summary.innerHTML = `
-    <div class="am-stat"><div class="am-stat-label">Clientes com produto</div><div class="am-stat-val">${clientsWithProduct.size}</div></div>
-    <div class="am-stat"><div class="am-stat-label">Registros</div><div class="am-stat-val">${match.length}</div></div>
-    <div class="am-stat"><div class="am-stat-label">Carteira total</div><div class="am-stat-val">${fmtNum(totalCart)} pares</div></div>
-    <div class="am-stat"><div class="am-stat-label">Faturado</div><div class="am-stat-val ok">${fmtNum(totalFat)}</div></div>
-    <div class="am-stat"><div class="am-stat-label">Em risco</div><div class="am-stat-val danger">${atRisk} reg.</div></div>
-    <div class="am-stat"><div class="am-stat-label">Em alerta</div><div class="am-stat-val warn">${atWarn} reg.</div></div>
-    <div class="am-stat"><div class="am-stat-label">Candidatos repasse</div><div class="am-stat-val" style="color:var(--primary)">${candidates.length}</div></div>
+    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Clientes com produto</div><div class="am-stat-val">${clientsWithProduct.size}</div></div>
+    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Registros</div><div class="am-stat-val">${match.length}</div></div>
+    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Carteira total</div><div class="am-stat-val">${fmtNum(totalCart)} pares</div></div>
+    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Faturado</div><div class="am-stat-val ok">${fmtNum(totalFat)}</div></div>
+    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Em risco</div><div class="am-stat-val danger">${atRisk} reg.</div></div>
+    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Em alerta</div><div class="am-stat-val warn">${atWarn} reg.</div></div>
+    <div class="am-stat ${_amShowCandidatesOnly?'active':''}" data-kpi="candidates" title="Clique para ver apenas candidatos ao repasse" style="cursor:pointer;border-style:dashed">
+      <div class="am-stat-label">Candidatos repasse 👆</div>
+      <div class="am-stat-val" style="color:var(--primary)">${candidates.length}</div>
+    </div>
   `;
 
-  // Sort by risk first
+  // Wire KPI clicks
+  summary.querySelectorAll('.am-stat').forEach(el=>{
+    el.addEventListener('click',()=>{
+      if(el.dataset.kpi==='candidates'){
+        _amShowCandidatesOnly = !_amShowCandidatesOnly;
+        amRenderCobertura();
+      }
+    });
+  });
+
+  const tableHead = `<thead><tr>
+    <th>Cliente</th><th>Filial</th><th>Referência</th><th>Cor</th>
+    <th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th>
+  </tr></thead>`;
+
+  // If showing candidates only
+  if(_amShowCandidatesOnly){
+    if(!candidates.length){
+      results.innerHTML=`<div class="am-empty"><div class="am-empty-icon">✅</div><p>Todos os clientes já possuem esse produto na carteira.</p></div>`;
+      return;
+    }
+    const candidateRows = candidates.map(c=> `<tr>
+      <td><strong>${esc(c)}</strong></td>
+      <td colspan="5" style="color:var(--muted);font-style:italic">Não possui esse produto — candidato ao repasse</td>
+      <td></td>
+    </tr>`).join('');
+    results.innerHTML = `
+      <div class="am-section-header">
+        Candidatos ao repasse
+        <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes</span>
+        <button onclick="_amShowCandidatesOnly=false;amRenderCobertura()" style="margin-left:auto;font-size:0.68rem;font-weight:700;color:var(--primary);background:none;border:none;cursor:pointer;padding:0 4px">← Ver todos</button>
+      </div>
+      <div class="am-table-wrap">
+        <table class="am-table">${tableHead}<tbody>${candidateRows}</tbody></table>
+      </div>`;
+    return;
+  }
+
+  // Normal view — both sections
   const riskOrder = {danger:0,warn:1,neutral:2,ok:3};
   const sortedRows = [...match].sort((a,b)=> riskOrder[amRowRisk(a)] - riskOrder[amRowRisk(b)]);
 
@@ -2050,16 +2185,11 @@ function amRenderCobertura(){
     </tr>`;
   }).join('');
 
-  const candidateRows = candidates.slice(0,50).map(c=> `<tr>
+  const candidateRows = candidates.slice(0,60).map(c=> `<tr>
     <td><strong>${esc(c)}</strong></td>
-    <td colspan="5" style="color:var(--muted);font-size:0.78rem;font-style:italic">Não possui esse produto na carteira — candidato ao repasse</td>
+    <td colspan="5" style="color:var(--muted);font-style:italic">Não possui esse produto — candidato ao repasse</td>
     <td></td>
   </tr>`).join('');
-
-  const tableHead = `<thead><tr>
-    <th>Cliente</th><th>Filial</th><th>Referência</th><th>Cor</th>
-    <th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th>
-  </tr></thead>`;
 
   results.innerHTML = `
     <div class="am-section-header">
