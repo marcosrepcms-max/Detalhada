@@ -536,6 +536,166 @@
     .meta-card .label{font-size:0.64rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:var(--muted);}
     .meta-card .value{font-size:0.84rem;font-weight:700;margin-top:2px;}
 
+    /* ── ANÁLISE DE REPASSE MODAL ── */
+    #analiseBackdrop {
+      position:fixed;inset:0;z-index:100;
+      background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);
+      display:none;opacity:0;transition:opacity 0.25s;
+    }
+    #analiseBackdrop.open{display:flex;align-items:center;justify-content:center;}
+    #analiseBackdrop.visible{opacity:1;}
+    #analiseModal {
+      background:var(--surface);border-radius:16px;
+      box-shadow:0 24px 80px rgba(0,0,0,0.28);
+      width:min(1100px,calc(100vw - 24px));
+      max-height:92vh;display:flex;flex-direction:column;
+      transform:translateY(24px) scale(0.97);
+      transition:transform 0.28s cubic-bezier(0.34,1.4,0.64,1),opacity 0.22s;
+      opacity:0;overflow:hidden;
+    }
+    #analiseBackdrop.visible #analiseModal{transform:translateY(0) scale(1);opacity:1;}
+    /* Modal header */
+    #analiseModal .am-head {
+      display:flex;align-items:center;gap:10px;
+      padding:14px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
+    }
+    #analiseModal .am-head-icon {
+      width:34px;height:34px;border-radius:9px;flex-shrink:0;
+      background:linear-gradient(135deg,var(--primary),#6070ff);
+      display:grid;place-items:center;color:#fff;font-size:1rem;
+    }
+    #analiseModal .am-title{font-size:1rem;font-weight:800;color:var(--text);}
+    #analiseModal .am-sub{font-size:0.72rem;color:var(--muted);margin-top:1px;}
+    /* Tabs */
+    .am-tabs{display:flex;gap:2px;padding:10px 18px 0;border-bottom:1px solid var(--line);flex-shrink:0;}
+    .am-tab{
+      padding:7px 16px;font-size:0.78rem;font-weight:700;border-radius:8px 8px 0 0;
+      border:1.5px solid transparent;border-bottom:none;cursor:pointer;
+      color:var(--muted);background:transparent;transition:all 0.15s;
+      position:relative;top:1px;
+    }
+    .am-tab:hover{color:var(--primary);background:var(--primary-soft);}
+    .am-tab.active{
+      background:var(--surface);border-color:var(--line);
+      color:var(--primary);border-bottom:1.5px solid var(--surface);
+    }
+    /* Tab panels */
+    .am-panel{display:none;flex:1;overflow:hidden;flex-direction:column;}
+    .am-panel.active{display:flex;}
+    /* Search bar */
+    .am-search-bar{
+      display:flex;align-items:center;gap:10px;
+      padding:14px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
+      flex-wrap:wrap;
+    }
+    .am-autocomplete-wrap{position:relative;flex:1;min-width:200px;max-width:380px;}
+    .am-autocomplete-wrap input{
+      width:100%;padding:8px 12px;border-radius:8px;
+      border:1.5px solid var(--line);background:var(--bg);
+      color:var(--text);font-size:0.84rem;outline:none;
+      transition:border-color 0.15s;
+    }
+    .am-autocomplete-wrap input:focus{border-color:var(--primary);}
+    .am-dropdown{
+      position:absolute;top:calc(100% + 4px);left:0;right:0;z-index:200;
+      background:var(--surface);border:1.5px solid var(--line);
+      border-radius:9px;box-shadow:0 8px 32px rgba(0,0,0,0.15);
+      max-height:220px;overflow-y:auto;display:none;
+    }
+    .am-dropdown.open{display:block;}
+    .am-dd-item{
+      padding:8px 12px;font-size:0.8rem;cursor:pointer;
+      border-bottom:1px solid var(--line);transition:background 0.1s;
+      display:flex;flex-direction:column;gap:2px;
+    }
+    .am-dd-item:last-child{border-bottom:none;}
+    .am-dd-item:hover,.am-dd-item.focused{background:var(--primary-soft);color:var(--primary);}
+    .am-dd-item strong{font-weight:700;}
+    .am-dd-item span{font-size:0.69rem;color:var(--muted);}
+    .am-dd-item:hover span,.am-dd-item.focused span{color:var(--primary);}
+    /* Color chips row */
+    .am-cor-row{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+    .am-cor-chip{
+      padding:4px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;
+      border:1.5px solid var(--line);background:var(--surface2);cursor:pointer;
+      transition:all 0.15s;color:var(--muted);
+    }
+    .am-cor-chip:hover{border-color:var(--primary);color:var(--primary);}
+    .am-cor-chip.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+    /* Results area */
+    .am-results{flex:1;overflow:auto;padding:0;}
+    /* Summary strip */
+    .am-summary{
+      display:flex;gap:10px;padding:10px 18px;
+      background:var(--bg);border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap;
+    }
+    .am-stat{
+      background:var(--surface);border:1px solid var(--line);border-radius:8px;
+      padding:8px 14px;display:flex;flex-direction:column;gap:2px;min-width:120px;
+      transition:transform 0.15s,box-shadow 0.15s;
+    }
+    .am-stat:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(40,54,212,0.12);}
+    .am-stat-label{font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);}
+    .am-stat-val{font-size:1.1rem;font-weight:800;color:var(--text);}
+    .am-stat-val.ok{color:var(--ok);}
+    .am-stat-val.danger{color:var(--danger);}
+    .am-stat-val.warn{color:var(--warn);}
+    /* Section headers */
+    .am-section-header{
+      padding:10px 18px 6px;font-size:0.7rem;font-weight:800;
+      text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);
+      display:flex;align-items:center;gap:8px;
+    }
+    .am-section-header::after{content:'';flex:1;height:1px;background:var(--line);}
+    .am-section-badge{
+      padding:2px 8px;border-radius:10px;font-size:0.65rem;font-weight:700;
+      background:var(--primary-soft);color:var(--primary);
+    }
+    /* Analysis table */
+    .am-table-wrap{overflow-x:auto;}
+    table.am-table{
+      width:100%;border-collapse:collapse;font-size:0.78rem;
+    }
+    table.am-table th{
+      padding:7px 12px;text-align:left;font-size:0.66rem;font-weight:700;
+      text-transform:uppercase;letter-spacing:0.05em;
+      background:var(--header-bg-from);color:var(--header-text);
+      border-bottom:2px solid var(--header-border);white-space:nowrap;
+      position:sticky;top:0;z-index:2;
+    }
+    table.am-table td{
+      padding:7px 12px;border-bottom:1px solid var(--line);color:var(--text);
+      vertical-align:middle;
+    }
+    table.am-table tbody tr{transition:background 0.1s;}
+    table.am-table tbody tr:hover td{background:var(--row-hover-bg);}
+    .am-risk-row td{background:rgba(220,38,38,0.04)!important;}
+    .am-risk-row:hover td{background:rgba(220,38,38,0.09)!important;}
+    /* Empty / loading states */
+    .am-empty{
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      padding:48px 24px;gap:12px;color:var(--muted);text-align:center;
+    }
+    .am-empty-icon{font-size:2.4rem;opacity:0.4;}
+    .am-empty p{font-size:0.84rem;max-width:280px;line-height:1.5;}
+    /* Risk tab filter bar */
+    .am-risk-controls{
+      display:flex;gap:8px;align-items:center;padding:10px 18px;
+      border-bottom:1px solid var(--line);flex-wrap:wrap;flex-shrink:0;
+    }
+    .am-risk-tag{
+      padding:4px 10px;border-radius:6px;font-size:0.72rem;font-weight:700;
+      border:1.5px solid var(--line);cursor:pointer;transition:all 0.15s;
+      background:var(--surface);color:var(--muted);
+    }
+    .am-risk-tag.active-ok   {background:#dcfce7;border-color:#16a34a;color:#15803d;}
+    .am-risk-tag.active-warn {background:#fef3c7;border-color:#d97706;color:#92400e;}
+    .am-risk-tag.active-danger{background:#fee2e2;border-color:#dc2626;color:#991b1b;}
+    .am-risk-tag.active-blue {background:#dbeafe;border-color:#2563eb;color:#1d4ed8;}
+    body.dark .am-risk-tag.active-ok{background:rgba(34,212,138,0.15);border-color:#22d48a;color:#22d48a;}
+    body.dark .am-risk-tag.active-warn{background:rgba(245,158,11,0.15);border-color:#f59e0b;color:#f59e0b;}
+    body.dark .am-risk-tag.active-danger{background:rgba(248,113,113,0.15);border-color:#f87171;color:#f87171;}
+    body.dark .am-risk-tag.active-blue{background:rgba(91,110,245,0.2);border-color:#5b6ef5;color:#818cf8;}
     /* ── MISC ── */
     @keyframes spin{to{transform:rotate(360deg);}}
     #btnRefresh.spin #refreshIcon{animation:spin 0.7s linear infinite;}
@@ -619,6 +779,12 @@
     <svg id="refreshIcon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M1 4v6h6"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
   </button>
 
+  <!-- Analysis button -->
+  <button class="tb-btn-wide" id="btnAnalise" title="Análise de carteira e repasse" style="background:linear-gradient(135deg,var(--primary),#6070ff);border-color:transparent;color:#fff;font-weight:800;">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    Análise
+  </button>
+
   <div class="tb-sep"></div>
 
   <!-- Font size -->
@@ -675,6 +841,53 @@
   <div class="modal-body-grid">
     <div class="modal-img" id="modalImg"></div>
     <div class="modal-meta-grid" id="modalMeta"></div>
+  </div>
+</div>
+
+<!-- ANÁLISE DE REPASSE MODAL -->
+<div id="analiseBackdrop">
+  <div id="analiseModal" role="dialog" aria-modal="true">
+    <div class="am-head">
+      <div class="am-head-icon">⚡</div>
+      <div>
+        <div class="am-title">Análise Inteligente de Carteira</div>
+        <div class="am-sub">Cobertura de produto · Risco de cancelamento</div>
+      </div>
+      <button class="tb-btn" id="btnCloseAnalise" title="Fechar" style="margin-left:auto">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="am-tabs">
+      <button class="am-tab active" data-tab="cobertura">🗺️ Cobertura &amp; Repasse</button>
+      <button class="am-tab" data-tab="risco">⚠️ Risco do Mês</button>
+    </div>
+    <!-- TAB COBERTURA -->
+    <div class="am-panel active" id="am-cobertura">
+      <div class="am-search-bar">
+        <div class="am-autocomplete-wrap">
+          <input id="amRefInput" type="text" placeholder="🔍  Digite a referência (ex: CORRE MAX)..." autocomplete="off"/>
+          <div class="am-dropdown" id="amRefDropdown"></div>
+        </div>
+        <div class="am-cor-row" id="amCorRow"></div>
+      </div>
+      <div class="am-summary" id="amSummary" style="display:none"></div>
+      <div class="am-results" id="amResults">
+        <div class="am-empty">
+          <div class="am-empty-icon">🔎</div>
+          <p>Digite uma referência para ver quem tem esse produto na carteira e identificar candidatos ao repasse.</p>
+        </div>
+      </div>
+    </div>
+    <!-- TAB RISCO -->
+    <div class="am-panel" id="am-risco">
+      <div class="am-risk-controls" id="amRiskControls">
+        <span style="font-size:0.72rem;font-weight:700;color:var(--muted);white-space:nowrap">Filtrar status:</span>
+      </div>
+      <div class="am-summary" id="amRiscoSummary"></div>
+      <div class="am-results" id="amRiscoResults">
+        <div class="am-empty"><div class="am-empty-icon">⏳</div><p>Carregando...</p></div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1629,6 +1842,356 @@ buildColumnsPanel();
 applyUiPrefs();
 window.addEventListener('resize', ()=>requestAnimationFrame(syncStickyTableLayout));
 loadData();
+
+// ══════════════════════════════════════════════════════════════════
+// ANÁLISE DE REPASSE — modal logic
+// ══════════════════════════════════════════════════════════════════
+
+const AMBackdrop = document.getElementById('analiseBackdrop');
+const AMModal    = document.getElementById('analiseModal');
+
+// Open / close
+function openAnalise(){
+  AMBackdrop.style.display = 'flex';
+  requestAnimationFrame(()=>{
+    AMBackdrop.classList.add('open');
+    requestAnimationFrame(()=> AMBackdrop.classList.add('visible'));
+  });
+  // build risco tab on first open when data is ready
+  if(S.raw.length) amBuildRisco();
+}
+function closeAnalise(){
+  AMBackdrop.classList.remove('visible');
+  setTimeout(()=>{ AMBackdrop.classList.remove('open'); AMBackdrop.style.display='none'; }, 280);
+}
+document.getElementById('btnAnalise')?.addEventListener('click', openAnalise);
+document.getElementById('btnCloseAnalise')?.addEventListener('click', closeAnalise);
+AMBackdrop.addEventListener('click', e=>{ if(e.target===AMBackdrop) closeAnalise(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape' && AMBackdrop.classList.contains('open')) closeAnalise(); });
+
+// Tabs
+document.querySelectorAll('.am-tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.am-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.am-panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    const id = 'am-'+tab.dataset.tab;
+    document.getElementById(id)?.classList.add('active');
+    if(tab.dataset.tab==='risco' && S.raw.length) amBuildRisco();
+  });
+});
+
+// ── TAB 1: COBERTURA & REPASSE ────────────────────────────────────
+
+let _amRef = '';   // selected referencia
+let _amCor = '';   // selected cor
+let _amRefs = [];  // autocomplete list [{ref, desc, count}]
+
+// Build unique reference list from raw data
+function amBuildRefList(){
+  const map = {};
+  S.raw.forEach(r=>{
+    const ref = (r['REFERENCIA']||'').trim();
+    const desc = (r['DESCRICAO']||'').trim();
+    if(!ref) return;
+    if(!map[ref]) map[ref] = {ref, desc, count:0};
+    map[ref].count++;
+  });
+  _amRefs = Object.values(map).sort((a,b)=>a.ref.localeCompare(b.ref));
+}
+
+// Autocomplete input
+const amRefInput    = document.getElementById('amRefInput');
+const amRefDropdown = document.getElementById('amRefDropdown');
+let _amDdIdx = -1;
+
+amRefInput?.addEventListener('input', ()=>{
+  const q = amRefInput.value.trim().toUpperCase();
+  _amDdIdx = -1;
+  if(!q){ amRefDropdown.classList.remove('open'); return; }
+  if(!_amRefs.length) amBuildRefList();
+  const hits = _amRefs.filter(r=> r.ref.includes(q) || r.desc.toUpperCase().includes(q)).slice(0,30);
+  if(!hits.length){ amRefDropdown.classList.remove('open'); return; }
+  amRefDropdown.innerHTML = hits.map((r,i)=>`
+    <div class="am-dd-item" data-ref="${esc(r.ref)}" data-idx="${i}">
+      <strong>${esc(r.ref)}</strong>
+      <span>${esc(r.desc)} · ${r.count} reg.</span>
+    </div>`).join('');
+  amRefDropdown.classList.add('open');
+});
+
+amRefDropdown?.addEventListener('click', e=>{
+  const item = e.target.closest('.am-dd-item');
+  if(!item) return;
+  amSelectRef(item.dataset.ref);
+});
+
+amRefInput?.addEventListener('keydown', e=>{
+  const items = amRefDropdown.querySelectorAll('.am-dd-item');
+  if(!items.length) return;
+  if(e.key==='ArrowDown'){ e.preventDefault(); _amDdIdx=Math.min(_amDdIdx+1,items.length-1); amHighlightDd(items); }
+  else if(e.key==='ArrowUp'){ e.preventDefault(); _amDdIdx=Math.max(_amDdIdx-1,0); amHighlightDd(items); }
+  else if(e.key==='Enter' && _amDdIdx>=0){ amSelectRef(items[_amDdIdx].dataset.ref); }
+  else if(e.key==='Escape'){ amRefDropdown.classList.remove('open'); }
+});
+
+document.addEventListener('click', e=>{
+  if(!e.target.closest('.am-autocomplete-wrap')) amRefDropdown.classList.remove('open');
+});
+
+function amHighlightDd(items){
+  items.forEach((el,i)=> el.classList.toggle('focused', i===_amDdIdx));
+  if(_amDdIdx>=0) items[_amDdIdx].scrollIntoView({block:'nearest'});
+}
+
+function amSelectRef(ref){
+  _amRef = ref;
+  _amCor = '';
+  amRefInput.value = ref;
+  amRefDropdown.classList.remove('open');
+  amRenderCors();
+  amRenderCobertura();
+}
+
+// Render color chips for selected reference
+function amRenderCors(){
+  const corRow = document.getElementById('amCorRow');
+  if(!corRow) return;
+  if(!_amRef){ corRow.innerHTML=''; return; }
+  const cors = [...new Set(S.raw.filter(r=>(r['REFERENCIA']||'').trim()===_amRef).map(r=>(r['COR']||'').trim()).filter(Boolean))].sort();
+  corRow.innerHTML = `<span style="font-size:0.7rem;font-weight:700;color:var(--muted);white-space:nowrap">Cor:</span>`
+    + `<button class="am-cor-chip ${!_amCor?'active':''}" data-cor="">Todas</button>`
+    + cors.map(c=>`<button class="am-cor-chip ${_amCor===c?'active':''}" data-cor="${esc(c)}">${esc(c)}</button>`).join('');
+  corRow.querySelectorAll('.am-cor-chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _amCor = btn.dataset.cor;
+      corRow.querySelectorAll('.am-cor-chip').forEach(b=>b.classList.toggle('active', b.dataset.cor===_amCor));
+      amRenderCobertura();
+    });
+  });
+}
+
+// Status helpers
+const RISK_STATUSES   = new Set(['URGENTE','ATRASADO','CANCELAR']);
+const WARN_STATUSES   = new Set(['AGUARDAR','PENDENTE','CONFIRMAR','PEND 04/02']);
+const OK_STATUSES     = new Set(['OK','FATURADO','SUCESSO','FATURAR']);
+
+function amRowRisk(row){
+  const statuses = ['STATUS 1','STATUS 2','STATUS 3'].map(k=>(row[k]||'').toUpperCase().trim());
+  if(statuses.some(s=> RISK_STATUSES.has(s))) return 'danger';
+  if(statuses.some(s=> WARN_STATUSES.has(s)))  return 'warn';
+  if(statuses.some(s=> OK_STATUSES.has(s)))    return 'ok';
+  return 'neutral';
+}
+
+function amStatusBadges(row){
+  return ['STATUS 1','STATUS 2','STATUS 3']
+    .map(k=> row[k]? `<span class="badge ${statusClass(row[k])}">${esc(row[k])}</span>` : '')
+    .filter(Boolean).join(' ');
+}
+
+// Main cobertura render
+function amRenderCobertura(){
+  const summary  = document.getElementById('amSummary');
+  const results  = document.getElementById('amResults');
+  if(!_amRef){ results.innerHTML=`<div class="am-empty"><div class="am-empty-icon">🔎</div><p>Digite uma referência acima.</p></div>`; summary.style.display='none'; return; }
+
+  // rows that match ref + optional cor
+  const match = S.raw.filter(r=>{
+    if((r['REFERENCIA']||'').trim() !== _amRef) return false;
+    if(_amCor && (r['COR']||'').trim() !== _amCor) return false;
+    return true;
+  });
+
+  // Group by client
+  const clientMap = {};
+  match.forEach(r=>{
+    const nome = (r['NOME FANTASIA']||'—').trim();
+    if(!clientMap[nome]) clientMap[nome] = {nome, rows:[]};
+    clientMap[nome].rows.push(r);
+  });
+
+  const allClients = [...new Set(S.raw.map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean))];
+  const clientsWithProduct = new Set(Object.keys(clientMap));
+  const candidates = allClients.filter(c=> !clientsWithProduct.has(c));
+
+  // Stats
+  const totalCart = match.reduce((s,r)=> s+(Number(r['CART'])||0), 0);
+  const totalFat  = match.reduce((s,r)=> s+(Number(r['FAT'])||0), 0);
+  const atRisk    = match.filter(r=> amRowRisk(r)==='danger').length;
+  const atWarn    = match.filter(r=> amRowRisk(r)==='warn').length;
+
+  summary.style.display='flex';
+  summary.innerHTML = `
+    <div class="am-stat"><div class="am-stat-label">Clientes com produto</div><div class="am-stat-val">${clientsWithProduct.size}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Registros</div><div class="am-stat-val">${match.length}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Carteira total</div><div class="am-stat-val">${fmtNum(totalCart)} pares</div></div>
+    <div class="am-stat"><div class="am-stat-label">Faturado</div><div class="am-stat-val ok">${fmtNum(totalFat)}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Em risco</div><div class="am-stat-val danger">${atRisk} reg.</div></div>
+    <div class="am-stat"><div class="am-stat-label">Em alerta</div><div class="am-stat-val warn">${atWarn} reg.</div></div>
+    <div class="am-stat"><div class="am-stat-label">Candidatos repasse</div><div class="am-stat-val" style="color:var(--primary)">${candidates.length}</div></div>
+  `;
+
+  // Sort by risk first
+  const riskOrder = {danger:0,warn:1,neutral:2,ok:3};
+  const sortedRows = [...match].sort((a,b)=> riskOrder[amRowRisk(a)] - riskOrder[amRowRisk(b)]);
+
+  const coverRows = sortedRows.map(r=>{
+    const risk = amRowRisk(r);
+    const rClass = risk==='danger' ? 'am-risk-row' : '';
+    return `<tr class="${rClass}">
+      <td><strong>${esc((r['NOME FANTASIA']||'—').trim())}</strong></td>
+      <td>${esc(r['FILIAL']||'—')}</td>
+      <td style="color:var(--primary);font-weight:700">${esc(r['REFERENCIA']||'—')}</td>
+      <td>${esc(r['COR']||'—')}</td>
+      <td style="text-align:right;font-weight:700">${fmtNum(r['CART']||0)}</td>
+      <td>${amStatusBadges(r)||'<span style="color:var(--muted)">—</span>'}</td>
+      <td style="color:var(--muted);font-size:0.72rem">${esc(fmtDate(r['PREV FAT']))}</td>
+    </tr>`;
+  }).join('');
+
+  const candidateRows = candidates.slice(0,50).map(c=> `<tr>
+    <td><strong>${esc(c)}</strong></td>
+    <td colspan="5" style="color:var(--muted);font-size:0.78rem;font-style:italic">Não possui esse produto na carteira — candidato ao repasse</td>
+    <td></td>
+  </tr>`).join('');
+
+  const tableHead = `<thead><tr>
+    <th>Cliente</th><th>Filial</th><th>Referência</th><th>Cor</th>
+    <th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th>
+  </tr></thead>`;
+
+  results.innerHTML = `
+    <div class="am-section-header">
+      Clientes com o produto
+      <span class="am-section-badge">${clientsWithProduct.size} clientes · ${match.length} registros</span>
+    </div>
+    <div class="am-table-wrap">
+      <table class="am-table">${tableHead}<tbody>${coverRows}</tbody></table>
+    </div>
+    ${candidates.length ? `
+    <div class="am-section-header" style="margin-top:8px">
+      Candidatos ao repasse
+      <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes sem esse produto</span>
+    </div>
+    <div class="am-table-wrap">
+      <table class="am-table">${tableHead}<tbody>${candidateRows}</tbody></table>
+    </div>` : ''}
+  `;
+}
+
+// ── TAB 2: RISCO DO MÊS ──────────────────────────────────────────
+
+let _amRiskFilter = new Set(); // empty = all
+
+function amBuildRisco(){
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const nextMonth = new Date(now.getFullYear(), now.getMonth()+1, 1);
+  const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth()+1).padStart(2,'0')}`;
+
+  // Rows with critical/warn status AND prev fat in current or next month
+  const risky = S.raw.filter(r=>{
+    const risk = amRowRisk(r);
+    if(risk==='neutral') return false;
+    const d = asDate(r['PREV FAT']);
+    if(!d) return false;
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return ym===thisMonth || ym===nextMonthStr;
+  });
+
+  // Collect all unique statuses present
+  const allStatuses = new Set();
+  risky.forEach(r=> ['STATUS 1','STATUS 2','STATUS 3'].forEach(k=>{ if(r[k]) allStatuses.add(r[k].trim()); }));
+
+  // Build filter chips
+  const controls = document.getElementById('amRiskControls');
+  controls.innerHTML = `<span style="font-size:0.72rem;font-weight:700;color:var(--muted);white-space:nowrap">Filtrar status:</span>`;
+  allStatuses.forEach(s=>{
+    const cl = statusClass(s);
+    const activeCls = cl==='s-danger'?'active-danger':cl==='s-warn'?'active-warn':cl==='s-ok'?'active-ok':'active-blue';
+    const btn = document.createElement('button');
+    btn.className = 'am-risk-tag';
+    btn.textContent = s;
+    btn.dataset.status = s;
+    btn.dataset.activecls = activeCls;
+    if(_amRiskFilter.has(s)){ btn.classList.add(activeCls); }
+    btn.addEventListener('click',()=>{
+      if(_amRiskFilter.has(s)){ _amRiskFilter.delete(s); btn.classList.remove(activeCls); }
+      else { _amRiskFilter.add(s); btn.classList.add(activeCls); }
+      amRenderRisco(risky);
+    });
+    controls.appendChild(btn);
+  });
+
+  amRenderRisco(risky);
+}
+
+function amRenderRisco(risky){
+  const filtered = _amRiskFilter.size===0 ? risky : risky.filter(r=>
+    ['STATUS 1','STATUS 2','STATUS 3'].some(k=> _amRiskFilter.has((r[k]||'').trim()))
+  );
+
+  const summary = document.getElementById('amRiscoSummary');
+  const results = document.getElementById('amRiscoResults');
+
+  const totalCart = filtered.reduce((s,r)=>s+(Number(r['CART'])||0),0);
+  const totalDanger = filtered.filter(r=>amRowRisk(r)==='danger').length;
+  const totalWarn   = filtered.filter(r=>amRowRisk(r)==='warn').length;
+  const clients = new Set(filtered.map(r=>r['NOME FANTASIA'])).size;
+
+  summary.innerHTML = `
+    <div class="am-stat"><div class="am-stat-label">Registros em risco</div><div class="am-stat-val danger">${filtered.length}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Críticos 🔴</div><div class="am-stat-val danger">${totalDanger}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Atenção 🟡</div><div class="am-stat-val warn">${totalWarn}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Clientes afetados</div><div class="am-stat-val">${clients}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Pares em risco</div><div class="am-stat-val danger">${fmtNum(totalCart)}</div></div>
+  `;
+
+  if(!filtered.length){
+    results.innerHTML=`<div class="am-empty"><div class="am-empty-icon">✅</div><p>Nenhum registro crítico encontrado para este mês.</p></div>`;
+    return;
+  }
+
+  const riskOrder = {danger:0,warn:1,neutral:2,ok:3};
+  const sorted = [...filtered].sort((a,b)=>{
+    const rd = riskOrder[amRowRisk(a)]-riskOrder[amRowRisk(b)];
+    return rd!==0 ? rd : (Number(b['CART']||0)-Number(a['CART']||0));
+  });
+
+  const rows = sorted.map(r=>{
+    const risk = amRowRisk(r);
+    const rClass = risk==='danger'?'am-risk-row':'';
+    return `<tr class="${rClass}">
+      <td><strong>${esc((r['NOME FANTASIA']||'—').trim())}</strong></td>
+      <td>${esc(r['FILIAL']||'—')}</td>
+      <td style="color:var(--primary);font-weight:700">${esc(r['REFERENCIA']||'—')}</td>
+      <td>${esc(r['COR']||'—')}</td>
+      <td style="text-align:right;font-weight:700">${fmtNum(r['CART']||0)}</td>
+      <td>${amStatusBadges(r)||'—'}</td>
+      <td style="color:var(--muted);font-size:0.72rem">${esc(fmtDate(r['PREV FAT']))}</td>
+    </tr>`;
+  }).join('');
+
+  results.innerHTML = `
+    <div class="am-table-wrap">
+      <table class="am-table">
+        <thead><tr>
+          <th>Cliente</th><th>Filial</th><th>Referência</th><th>Cor</th>
+          <th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th>
+        </tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+  `;
+}
+
+// Re-build reference list after data loads
+const _origLoadData = loadData;
+// Patch: after data loads, build ref list for autocomplete
+const _amDataObserver = setInterval(()=>{
+  if(S.raw.length){ amBuildRefList(); clearInterval(_amDataObserver); }
+}, 500);
 </script>
 </body>
 </html>
