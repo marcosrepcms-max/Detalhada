@@ -589,8 +589,30 @@
       flex-wrap:wrap;transition:padding 0.2s;
     }
     .am-search-bar.collapsed .am-autocomplete-wrap,
-    .am-search-bar.collapsed .am-cor-row{ display:none; }
+    .am-search-bar.collapsed .am-cor-row,
+    .am-search-bar.collapsed .am-period-row{ display:none; }
     .am-search-bar.collapsed{ padding:6px 18px; }
+    /* Period filter row */
+    .am-period-row{
+      display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+      width:100%;padding-top:6px;
+    }
+    .am-period-label{font-size:0.7rem;font-weight:700;color:var(--muted);white-space:nowrap;}
+    .am-month-chip{
+      padding:4px 11px;border-radius:20px;font-size:0.72rem;font-weight:700;
+      border:1.5px solid var(--line);background:var(--surface2);cursor:pointer;
+      transition:all 0.15s;color:var(--muted);white-space:nowrap;
+    }
+    .am-month-chip:hover{border-color:var(--primary);color:var(--primary);}
+    .am-month-chip.active{background:var(--primary);border-color:var(--primary);color:#fff;}
+    .am-month-chip.today{border-color:var(--ok);color:var(--ok);}
+    .am-month-chip.today.active{background:var(--ok);border-color:var(--ok);color:#fff;}
+    /* Period pill shown when collapsed */
+    .am-period-pill{
+      display:none;padding:3px 10px;border-radius:20px;font-size:0.72rem;font-weight:700;
+      background:rgba(14,162,113,0.12);color:var(--ok);border:1.5px solid var(--ok);
+    }
+    .am-search-bar.collapsed .am-period-pill.has-period{ display:inline-flex; }
     /* Toggle filters button */
     .am-toggle-filters{
       margin-left:auto;display:inline-flex;align-items:center;gap:5px;
@@ -898,9 +920,16 @@
           <div class="am-dropdown" id="amRefDropdown"></div>
         </div>
         <div class="am-cor-row" id="amCorRow"></div>
+        <!-- Period filter — full width second row -->
+        <div class="am-period-row" id="amPeriodRow">
+          <span class="am-period-label">📅 Prev.Fat:</span>
+          <div id="amMonthChips" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+        </div>
+        <!-- Collapsed state pills -->
         <span class="am-ref-pill" id="amRefPill">
           <span id="amRefPillText">—</span>
         </span>
+        <span class="am-period-pill" id="amPeriodPill"></span>
         <button class="am-clear-btn" id="amClearBtn" title="Limpar filtros do modal" style="display:none">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
           Limpar
@@ -1925,8 +1954,7 @@ function openAnalise(){
     AMBackdrop.classList.add('open');
     requestAnimationFrame(()=> AMBackdrop.classList.add('visible'));
   });
-  // build risco tab on first open when data is ready
-  if(S.raw.length) amBuildRisco();
+  if(S.raw.length){ amBuildMonthChips(); amBuildRisco(); }
 }
 function closeAnalise(){
   AMBackdrop.classList.remove('visible');
@@ -1945,7 +1973,7 @@ document.querySelectorAll('.am-tab').forEach(tab=>{
     tab.classList.add('active');
     const id = 'am-'+tab.dataset.tab;
     document.getElementById(id)?.classList.add('active');
-    if(tab.dataset.tab==='risco' && S.raw.length) amBuildRisco();
+    if(tab.dataset.tab==='risco' && S.raw.length){ amBuildMonthChips(); amBuildRisco(); }
   });
 });
 
@@ -1957,13 +1985,17 @@ document.getElementById('amToggleFilters')?.addEventListener('click',()=>{
 
 // Clear modal filters
 document.getElementById('amClearBtn')?.addEventListener('click',()=>{
-  _amRef = ''; _amCor = ''; _amShowCandidatesOnly = false;
+  _amRef = ''; _amCor = ''; _amShowCandidatesOnly = false; _amMonth = '';
   if(amRefInput) amRefInput.value = '';
   document.getElementById('amCorRow').innerHTML = '';
   document.getElementById('amSummary').style.display = 'none';
   document.getElementById('amClearBtn').style.display = 'none';
+  const pill = document.getElementById('amPeriodPill');
+  if(pill){ pill.textContent=''; pill.classList.remove('has-period'); }
   const bar = document.getElementById('amSearchBar');
   if(bar) bar.classList.remove('collapsed');
+  // Reset month chips
+  amBuildMonthChips();
   document.getElementById('amResults').innerHTML = `<div class="am-empty"><div class="am-empty-icon">🔎</div><p>Digite uma referência para ver quem tem esse produto na carteira e identificar candidatos ao repasse.</p></div>`;
 });
 
@@ -1971,7 +2003,53 @@ document.getElementById('amClearBtn')?.addEventListener('click',()=>{
 
 let _amRef = '';   // selected referencia
 let _amCor = '';   // selected cor
+let _amMonth = ''; // selected YYYY-MM period filter
 let _amRefs = [];  // autocomplete list [{ref, desc, count}]
+
+// Build month chips from data — next 12 months with data
+function amBuildMonthChips(){
+  const chips = document.getElementById('amMonthChips');
+  if(!chips) return;
+  // Collect unique YYYY-MM from PREV FAT
+  const monthSet = new Set();
+  S.raw.forEach(r=>{
+    const d = asDate(r['PREV FAT']);
+    if(d) monthSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
+  });
+  const now = new Date();
+  const thisYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const sorted = [...monthSet].sort();
+  const ptMonths = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  chips.innerHTML = `<button class="am-month-chip ${!_amMonth?'active':''}" data-ym="">Todos</button>`
+    + sorted.map(ym=>{
+        const [y,m] = ym.split('-');
+        const label = `${ptMonths[+m-1]}/${y.slice(2)}`;
+        const isToday = ym===thisYM;
+        return `<button class="am-month-chip ${isToday?'today':''} ${_amMonth===ym?'active':''}" data-ym="${ym}">${label}${isToday?' ●':''}</button>`;
+      }).join('');
+  chips.querySelectorAll('.am-month-chip').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      _amMonth = btn.dataset.ym;
+      chips.querySelectorAll('.am-month-chip').forEach(b=>{
+        b.classList.toggle('active', b.dataset.ym===_amMonth);
+      });
+      // Update period pill
+      const pill = document.getElementById('amPeriodPill');
+      if(pill){
+        if(_amMonth){
+          const [y,m] = _amMonth.split('-');
+          pill.textContent = `${ptMonths[+m-1]}/${y}`;
+          pill.classList.add('has-period');
+        } else {
+          pill.textContent=''; pill.classList.remove('has-period');
+        }
+      }
+      amRenderCobertura();
+      // Also refresh risco if that tab is active
+      if(document.getElementById('am-risco')?.classList.contains('active')) amBuildRisco();
+    });
+  });
+}
 
 // Build unique reference list from raw data
 function amBuildRefList(){
@@ -2090,10 +2168,16 @@ function amRenderCobertura(){
   const results  = document.getElementById('amResults');
   if(!_amRef){ results.innerHTML=`<div class="am-empty"><div class="am-empty-icon">🔎</div><p>Digite uma referência acima.</p></div>`; summary.style.display='none'; return; }
 
-  // rows that match ref + optional cor
+  // rows that match ref + optional cor + optional month
   const match = S.raw.filter(r=>{
     if((r['REFERENCIA']||'').trim() !== _amRef) return false;
     if(_amCor && (r['COR']||'').trim() !== _amCor) return false;
+    if(_amMonth){
+      const d = asDate(r['PREV FAT']);
+      if(!d) return false;
+      const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      if(ym !== _amMonth) return false;
+    }
     return true;
   });
 
@@ -2105,9 +2189,32 @@ function amRenderCobertura(){
     clientMap[nome].rows.push(r);
   });
 
-  const allClients = [...new Set(S.raw.map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean))];
+  // Clients who have this product (in the selected month/all)
   const clientsWithProduct = new Set(Object.keys(clientMap));
-  const candidates = allClients.filter(c=> !clientsWithProduct.has(c));
+
+  // For candidates: clients who DON'T have this ref in the same period
+  // When month is active: we look for clients who have ANY order in that month but not this ref
+  let candidates;
+  if(_amMonth){
+    // All clients with any PREV FAT in the selected month
+    const clientsInMonth = new Set(
+      S.raw.filter(r=>{
+        const d = asDate(r['PREV FAT']);
+        if(!d) return false;
+        const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+        return ym === _amMonth;
+      }).map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean)
+    );
+    // Candidates = in that month but don't have THIS product
+    candidates = [...clientsInMonth].filter(c=> !clientsWithProduct.has(c));
+  } else {
+    const allClients = [...new Set(S.raw.map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean))];
+    candidates = allClients.filter(c=> !clientsWithProduct.has(c));
+  }
+
+  // Period label for display
+  const ptMonths = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  const periodLabel = _amMonth ? (()=>{ const [y,m]=_amMonth.split('-'); return `${ptMonths[+m-1]}/${y}`; })() : 'Todos os meses';
 
   // Stats
   const totalCart = match.reduce((s,r)=> s+(Number(r['CART'])||0), 0);
@@ -2118,13 +2225,13 @@ function amRenderCobertura(){
   summary.style.display='flex';
   summary.innerHTML = `
     <div class="am-stat" data-kpi="all"><div class="am-stat-label">Clientes com produto</div><div class="am-stat-val">${clientsWithProduct.size}</div></div>
-    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Registros</div><div class="am-stat-val">${match.length}</div></div>
+    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Registros ${_amMonth?`· ${periodLabel}`:''}</div><div class="am-stat-val">${match.length}</div></div>
     <div class="am-stat" data-kpi="all"><div class="am-stat-label">Carteira total</div><div class="am-stat-val">${fmtNum(totalCart)} pares</div></div>
     <div class="am-stat" data-kpi="all"><div class="am-stat-label">Faturado</div><div class="am-stat-val ok">${fmtNum(totalFat)}</div></div>
     <div class="am-stat" data-kpi="all"><div class="am-stat-label">Em risco</div><div class="am-stat-val danger">${atRisk} reg.</div></div>
     <div class="am-stat" data-kpi="all"><div class="am-stat-label">Em alerta</div><div class="am-stat-val warn">${atWarn} reg.</div></div>
     <div class="am-stat ${_amShowCandidatesOnly?'active':''}" data-kpi="candidates" title="Clique para ver apenas candidatos ao repasse" style="cursor:pointer;border-style:dashed">
-      <div class="am-stat-label">Candidatos repasse 👆</div>
+      <div class="am-stat-label">${_amMonth ? `Candidatos em ${periodLabel} 👆` : 'Candidatos repasse 👆'}</div>
       <div class="am-stat-val" style="color:var(--primary)">${candidates.length}</div>
     </div>
   `;
@@ -2157,8 +2264,8 @@ function amRenderCobertura(){
     </tr>`).join('');
     results.innerHTML = `
       <div class="am-section-header">
-        Candidatos ao repasse
-        <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes</span>
+        ${_amMonth ? `Candidatos em <strong>${periodLabel}</strong>` : 'Candidatos ao repasse'}
+        <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes${_amMonth?' com pedidos neste mês':''}</span>
         <button onclick="_amShowCandidatesOnly=false;amRenderCobertura()" style="margin-left:auto;font-size:0.68rem;font-weight:700;color:var(--primary);background:none;border:none;cursor:pointer;padding:0 4px">← Ver todos</button>
       </div>
       <div class="am-table-wrap">
@@ -2193,7 +2300,7 @@ function amRenderCobertura(){
 
   results.innerHTML = `
     <div class="am-section-header">
-      Clientes com o produto
+      Clientes com o produto${_amMonth?` <span style="color:var(--ok);font-weight:700">· ${periodLabel}</span>`:''}
       <span class="am-section-badge">${clientsWithProduct.size} clientes · ${match.length} registros</span>
     </div>
     <div class="am-table-wrap">
@@ -2201,8 +2308,8 @@ function amRenderCobertura(){
     </div>
     ${candidates.length ? `
     <div class="am-section-header" style="margin-top:8px">
-      Candidatos ao repasse
-      <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes sem esse produto</span>
+      ${_amMonth ? `Candidatos ao repasse em <strong>${periodLabel}</strong>` : 'Candidatos ao repasse'}
+      <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes${_amMonth?' com pedidos neste mês, sem esse produto':' sem esse produto'}</span>
     </div>
     <div class="am-table-wrap">
       <table class="am-table">${tableHead}<tbody>${candidateRows}</tbody></table>
@@ -2220,13 +2327,14 @@ function amBuildRisco(){
   const nextMonth = new Date(now.getFullYear(), now.getMonth()+1, 1);
   const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth()+1).padStart(2,'0')}`;
 
-  // Rows with critical/warn status AND prev fat in current or next month
+  // If a month is selected globally, use it; otherwise current + next
   const risky = S.raw.filter(r=>{
     const risk = amRowRisk(r);
     if(risk==='neutral') return false;
     const d = asDate(r['PREV FAT']);
     if(!d) return false;
     const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    if(_amMonth) return ym === _amMonth;
     return ym===thisMonth || ym===nextMonthStr;
   });
 
@@ -2320,7 +2428,7 @@ function amRenderRisco(risky){
 const _origLoadData = loadData;
 // Patch: after data loads, build ref list for autocomplete
 const _amDataObserver = setInterval(()=>{
-  if(S.raw.length){ amBuildRefList(); clearInterval(_amDataObserver); }
+  if(S.raw.length){ amBuildRefList(); amBuildMonthChips(); clearInterval(_amDataObserver); }
 }, 500);
 </script>
 </body>
