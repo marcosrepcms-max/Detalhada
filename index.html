@@ -887,18 +887,26 @@ function applyFilters(){
 
   // Column-level filters
   Object.entries(S.colFilters||{}).forEach(([k,v])=>{
-    if(!v||!v.length) return;
-    const def = colDef(k);
+    if(v===undefined||v===null) return;
     if(Array.isArray(v)){
+      if(!v.length) return;
       // ms filter
       data = data.filter(r=>{
         const rv = String(r[k]||'').trim();
         return v.includes(rv);
       });
-    } else if(v && typeof v==='object' && ('from' in v || 'to' in v)){
-      // date/month range
-      if(v.from) data=data.filter(r=>{ const d=asDate(r[k]); return d&&d>=new Date(v.from); });
-      if(v.to)   data=data.filter(r=>{ const d=asDate(r[k]); return d&&d<=new Date(v.to+'T23:59:59'); });
+    } else if(typeof v==='object' && ('from' in v || 'to' in v)){
+      // date range — v.from/to are YYYY-MM-DD strings
+      const fromD = v.from ? new Date(v.from) : null;
+      const toD   = v.to   ? new Date(v.to+'T23:59:59') : null;
+      if(!fromD && !toD) return;
+      data = data.filter(r=>{
+        const d = asDate(r[k]);
+        if(!d) return false;
+        if(fromD && d < fromD) return false;
+        if(toD   && d > toD)   return false;
+        return true;
+      });
     }
   });
 
@@ -967,11 +975,16 @@ function renderChips(){
   const yVal=document.getElementById('yearSel')?.value;
   if(yVal) chips.push({key:'__year__',label:`Ano: ${yVal}`});
   Object.entries(S.colFilters||{}).forEach(([k,v])=>{
-    if(!v||!v.length) return;
+    if(!v) return;
     const def=colDef(k);
     const lbl=def?.label||k;
-    if(Array.isArray(v)&&v.length) chips.push({key:k,label:`${lbl}: ${v.length>2?v.length+' itens':v.join(', ')}`});
-    else if(v&&typeof v==='object'){const{from,to}=v;if(from||to) chips.push({key:k,label:`${lbl}: ${from||'...'} → ${to||'...'}`});}
+    if(Array.isArray(v) && v.length){
+      chips.push({key:k, label:`${lbl}: ${v.length>2 ? v.length+' itens' : v.join(', ')}`});
+    } else if(typeof v==='object' && (v.from||v.to)){
+      const fromFmt = v.from ? v.from.slice(0,7) : '...';
+      const toFmt   = v.to   ? v.to.slice(0,7)   : '...';
+      chips.push({key:k, label:`${lbl}: ${fromFmt} → ${toFmt}`});
+    }
   });
   bar.innerHTML = chips.map(c=>`
     <span class="chip">${esc(c.label)}<button data-chip="${esc(c.key)}" title="Remover">×</button></span>
@@ -990,7 +1003,16 @@ function renderTable(){
   const rows=S.filtered.slice(start,start+S.pageSize);
 
   // build active column filter keys set for icon highlight
-  const activeCF = new Set(Object.keys(S.colFilters||{}).filter(k=>S.colFilters[k]?.length));
+  const activeCF = new Set(
+    Object.entries(S.colFilters||{})
+      .filter(([,v])=>{
+        if(!v) return false;
+        if(Array.isArray(v)) return v.length > 0;
+        if(typeof v==='object') return v.from || v.to;
+        return false;
+      })
+      .map(([k])=>k)
+  );
 
   const thead=`<thead><tr>
     ${vcols.map((c,i)=>`<th class="${S.sort.key===c.key?'sort-active':''}" data-col-idx="${i}" style="${S.colWidths&&S.colWidths[c.key]?'width:'+S.colWidths[c.key]+'px;min-width:'+S.colWidths[c.key]+'px;':''}">
@@ -1185,7 +1207,7 @@ colPanel.addEventListener('change',(e)=>{
 document.addEventListener('click',(e)=>{
   // Column filter button
   const cfBtn=e.target.closest('[data-colfilt]');
-  if(cfBtn){ openColFilter(cfBtn); return; }
+  if(cfBtn){ openColFilter(cfBtn, e); return; }
 
   // Row selection (click on tr, not on buttons)
   const tr=e.target.closest('tbody tr');
@@ -1324,7 +1346,7 @@ document.addEventListener('mouseup',(e)=>{
 let _cfpKey = null;
 const cfpEl = document.getElementById('colFilterPanel');
 
-function openColFilter(btn){
+function openColFilter(btn, e){
   const key = btn.dataset.colfilt;
   _cfpKey = key;
   const def = colDef(key);
@@ -1340,26 +1362,34 @@ function openColFilter(btn){
   body.innerHTML='';
 
   if(def?.type==='date'){
-    // Month range
+    // Month-based range picker
     const cur = S.colFilters[key]||{};
-    // extract YYYY-MM from stored YYYY-MM-DD
     const fromM = cur.from ? cur.from.slice(0,7) : '';
     const toM   = cur.to   ? cur.to.slice(0,7)   : '';
     const div = document.createElement('div');
     div.className='cfp-month';
     div.innerHTML=`
-      <label>De</label><input type="month" id="cfpFrom" value="${fromM}">
-      <label>Até</label><input type="month" id="cfpTo" value="${toM}">
+      <label>De (mês/ano)</label>
+      <input type="month" id="cfpFrom" value="${fromM}" style="border:1.5px solid var(--line);border-radius:6px;padding:5px 8px;font-size:0.8rem;background:var(--bg);outline:none;width:100%;">
+      <label>Até (mês/ano)</label>
+      <input type="month" id="cfpTo" value="${toM}" style="border:1.5px solid var(--line);border-radius:6px;padding:5px 8px;font-size:0.8rem;background:var(--bg);outline:none;width:100%;">
     `;
     body.appendChild(div);
   } else {
     // Multi-select list
     const allVals = [...new Set(S.raw.map(r=>String(r[key]||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-    const sel = S.colFilters[key]||[];
+    const sel = Array.isArray(S.colFilters[key]) ? [...S.colFilters[key]] : [];
 
     const srchDiv = document.createElement('div');
     srchDiv.className='cfp-search';
-    srchDiv.innerHTML=`<input type="text" id="cfpSrch" placeholder="Buscar...">`;
+    srchDiv.innerHTML=`
+      <input type="text" id="cfpSrch" placeholder="Buscar...">
+      <div style="display:flex;gap:6px;margin-top:5px;">
+        <button class="tb-btn" id="cfpSelAll" style="font-size:0.68rem;padding:2px 7px;">Todos</button>
+        <button class="tb-btn" id="cfpSelNone" style="font-size:0.68rem;padding:2px 7px;">Nenhum</button>
+        <span style="margin-left:auto;font-size:0.68rem;color:var(--muted);align-self:center;" id="cfpCount">${allVals.length} opções</span>
+      </div>
+    `;
     body.appendChild(srchDiv);
 
     const listDiv = document.createElement('div');
@@ -1369,6 +1399,7 @@ function openColFilter(btn){
 
     function renderOpts(q=''){
       const filtered = q ? allVals.filter(v=>v.toLowerCase().includes(q.toLowerCase())) : allVals;
+      document.getElementById('cfpCount').textContent = filtered.length + ' opções';
       if(!filtered.length){ listDiv.innerHTML=`<div class="cfp-empty">Sem opções</div>`; return; }
       listDiv.innerHTML = filtered.map(v=>`
         <label class="cfp-option">
@@ -1378,11 +1409,17 @@ function openColFilter(btn){
       `).join('');
     }
     renderOpts();
-    document.getElementById('cfpSrch').addEventListener('input',e=>renderOpts(e.target.value));
+    document.getElementById('cfpSrch').addEventListener('input',ev=>renderOpts(ev.target.value));
+    document.getElementById('cfpSelAll').addEventListener('click',()=>{
+      listDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=true);
+    });
+    document.getElementById('cfpSelNone').addEventListener('click',()=>{
+      listDiv.querySelectorAll('input[type=checkbox]').forEach(cb=>cb.checked=false);
+    });
   }
 
   cfpEl.classList.add('open');
-  e?.stopPropagation?.();
+  e?.stopPropagation();
 }
 
 function closeColFilter(){ cfpEl.classList.remove('open'); _cfpKey=null; }
@@ -1403,17 +1440,21 @@ document.getElementById('cfpApply').addEventListener('click',()=>{
   if(!_cfpKey) return;
   const def = colDef(_cfpKey);
   if(def?.type==='date'){
-    const from = document.getElementById('cfpFrom')?.value;
-    const to   = document.getElementById('cfpTo')?.value;
-    if(from||to){
+    const fromInput = document.getElementById('cfpFrom');
+    const toInput   = document.getElementById('cfpTo');
+    const from = fromInput?.value || ''; // "YYYY-MM"
+    const to   = toInput?.value   || ''; // "YYYY-MM"
+    if(from || to){
       S.colFilters[_cfpKey] = {
-        from: from ? from+'-01' : '',
+        from: from ? from + '-01' : '',
         to:   to   ? lastDayOfMonth(to) : ''
       };
-    } else { delete S.colFilters[_cfpKey]; }
+    } else {
+      delete S.colFilters[_cfpKey];
+    }
   } else {
     const checked = [...document.querySelectorAll('#cfpList input[type=checkbox]:checked')].map(cb=>cb.value);
-    if(checked.length) S.colFilters[_cfpKey]=checked;
+    if(checked.length) S.colFilters[_cfpKey] = checked;
     else delete S.colFilters[_cfpKey];
   }
   closeColFilter();
