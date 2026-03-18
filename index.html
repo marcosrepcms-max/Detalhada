@@ -1385,12 +1385,12 @@ document.addEventListener('click',closeAllDropdowns);
 function applyFilters(){
   let data = [...S.raw];
 
-  // Global search — aceita múltiplos termos separados por vírgula (regra OU)
+  // Global search — aceita múltiplos termos separados por vírgula (regra E)
   const q = document.getElementById('globalSearch').value.trim().toLowerCase();
   if(q){
     const terms = q.split(',').map(s=>s.trim()).filter(Boolean);
     if(terms.length){
-      data = data.filter(r=> terms.some(term => r.__srch.includes(term)));
+      data = data.filter(r=> terms.every(term => r.__srch.includes(term)));
     }
   }
 
@@ -1707,6 +1707,7 @@ let _corr = false;
 document.getElementById('btnCorre')?.addEventListener('click',()=>{
   _corr=!_corr;
   document.getElementById('btnCorre').classList.toggle('active',_corr);
+  amRefreshAnalysisScope();
   applyAndRender();
 });
 
@@ -2120,13 +2121,57 @@ let _amCor = '';   // selected cor
 let _amMonth = ''; // selected YYYY-MM period filter
 let _amRefs = [];  // autocomplete list [{ref, desc, count}]
 
+
+function amIsCorreRow(row){
+  const desc = String(row['DESCRICAO'] || row['DESCRIÇÃO'] || '').toLowerCase();
+  return desc.includes('corre');
+}
+
+function amGetEligibleClientSet(){
+  if(!_corr) return null;
+  return new Set(
+    S.raw
+      .filter(amIsCorreRow)
+      .map(r => (r['NOME FANTASIA'] || '').trim())
+      .filter(Boolean)
+  );
+}
+
+function amGetAnalysisBaseRows(){
+  const eligibleClients = amGetEligibleClientSet();
+  if(!eligibleClients) return S.raw;
+  return S.raw.filter(r => eligibleClients.has((r['NOME FANTASIA'] || '').trim()));
+}
+
+function amRefreshAnalysisScope(){
+  _amRefs = [];
+  if(!_amRef) return;
+  const baseRows = amGetAnalysisBaseRows();
+  const stillVisible = baseRows.some(r => (r['REFERENCIA'] || '').trim() === _amRef);
+  if(!stillVisible){
+    _amRef = '';
+    _amCor = '';
+    if(amRefInput) amRefInput.value = '';
+    const pill = document.getElementById('amRefPill');
+    const pillText = document.getElementById('amRefPillText');
+    if(pill && pillText){ pillText.textContent='—'; pill.classList.remove('has-ref'); }
+    const clearBtn = document.getElementById('amClearBtn');
+    if(clearBtn) clearBtn.style.display = 'none';
+  }
+  if(AMBackdrop?.classList.contains('open')){
+    amRenderCors();
+    amRenderCobertura();
+    if(document.getElementById('am-risco')?.classList.contains('active')) amBuildRisco();
+  }
+}
+
 // Build month chips from data — next 12 months with data
 function amBuildMonthChips(autoSelectCurrent){
   const chips = document.getElementById('amMonthChips');
   if(!chips) return;
   // Collect unique YYYY-MM from PREV FAT
   const monthSet = new Set();
-  S.raw.forEach(r=>{
+  amGetAnalysisBaseRows().forEach(r=>{
     const d = asDate(r['PREV FAT']);
     if(d) monthSet.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
   });
@@ -2178,7 +2223,7 @@ function amBuildMonthChips(autoSelectCurrent){
 // Build unique reference list from raw data
 function amBuildRefList(){
   const map = {};
-  S.raw.forEach(r=>{
+  amGetAnalysisBaseRows().forEach(r=>{
     const ref = (r['REFERENCIA']||'').trim();
     const desc = (r['DESCRICAO']||'').trim();
     if(!ref) return;
@@ -2254,7 +2299,7 @@ function amRenderCors(){
   const corRow = document.getElementById('amCorRow');
   if(!corRow) return;
   if(!_amRef){ corRow.innerHTML=''; return; }
-  const cors = [...new Set(S.raw.filter(r=>(r['REFERENCIA']||'').trim()===_amRef).map(r=>(r['COR']||'').trim()).filter(Boolean))].sort();
+  const cors = [...new Set(amGetAnalysisBaseRows().filter(r=>(r['REFERENCIA']||'').trim()===_amRef).map(r=>(r['COR']||'').trim()).filter(Boolean))].sort();
   corRow.innerHTML = `<span style="font-size:0.7rem;font-weight:700;color:var(--muted);white-space:nowrap">Cor:</span>`
     + `<button class="am-cor-chip ${!_amCor?'active':''}" data-cor="">Todas</button>`
     + cors.map(c=>`<button class="am-cor-chip ${_amCor===c?'active':''}" data-cor="${esc(c)}">${esc(c)}</button>`).join('');
@@ -2286,7 +2331,8 @@ function amScoreOpportunity({cart=0,fat=0,missingProduct=false,risk='neutral'}={
 
 function amGetCoverageContext(){
   const periodLabel = amPeriodLabelFromYM(_amMonth);
-  const match = S.raw.filter(r=>{
+  const baseRows = amGetAnalysisBaseRows();
+  const match = baseRows.filter(r=>{
     if((r['REFERENCIA']||'').trim() !== _amRef) return false;
     if(_amCor && (r['COR']||'').trim() !== _amCor) return false;
     if(_amMonth){
@@ -2299,7 +2345,7 @@ function amGetCoverageContext(){
   });
 
   const clientsWithProduct = new Set(match.map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean));
-  const monthPool = S.raw.filter(r=>{
+  const monthPool = baseRows.filter(r=>{
     if(!_amMonth) return true;
     const d = asDate(r['PREV FAT']);
     if(!d) return false;
@@ -2342,6 +2388,7 @@ function amRenderContextPills(extra={}){
   pills.push(`<span class="am-context-pill">🎨 Cor: <strong>${esc(_amCor || 'todas')}</strong></span>`);
   pills.push(`<span class="am-context-pill">📅 Período: <strong>${esc(_amMonth ? amPeriodLabelFromYM(_amMonth) : 'todos')}</strong></span>`);
   if(extra.mode) pills.push(`<span class="am-context-pill">🧭 Visão: <strong>${esc(extra.mode)}</strong></span>`);
+  if(_corr) pills.push(`<span class="am-context-pill">🏃 Linha: <strong>somente clientes CORRE</strong></span>`);
   wrap.innerHTML = pills.join('');
 }
 
@@ -2394,7 +2441,7 @@ function amRenderRepasse(){
 function amBuildPrioridades(){
   const summary = document.getElementById('amPrioridadesSummary');
   const results = document.getElementById('amPrioridadesResults');
-  const riskyBase = S.raw.filter(r=>{
+  const riskyBase = amGetAnalysisBaseRows().filter(r=>{
     const risk = amRowRisk(r);
     if(risk==='neutral') return false;
     if(!_amMonth) return true;
@@ -2569,13 +2616,14 @@ function amRenderCobertura(){
 let _amRiskFilter = new Set(); // empty = all
 
 function amBuildRisco(){
+  const baseRows = amGetAnalysisBaseRows();
   const now = new Date();
   const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
   const nextMonth = new Date(now.getFullYear(), now.getMonth()+1, 1);
   const nextMonthStr = `${nextMonth.getFullYear()}-${String(nextMonth.getMonth()+1).padStart(2,'0')}`;
 
   // If a month is selected globally, use it; otherwise current + next
-  const risky = S.raw.filter(r=>{
+  const risky = baseRows.filter(r=>{
     const risk = amRowRisk(r);
     if(risk==='neutral') return false;
     const d = asDate(r['PREV FAT']);
