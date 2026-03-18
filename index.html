@@ -539,25 +539,26 @@
     /* ── ANÁLISE DE REPASSE MODAL ── */
     #analiseBackdrop {
       position:fixed;inset:0;z-index:100;
-      background:rgba(0,0,0,0.55);backdrop-filter:blur(4px);
+      background:rgba(8,12,28,0.62);backdrop-filter:blur(6px);
       display:none;opacity:0;transition:opacity 0.25s;
     }
-    #analiseBackdrop.open{display:flex;align-items:center;justify-content:center;}
+    #analiseBackdrop.open{display:flex;align-items:stretch;justify-content:stretch;}
     #analiseBackdrop.visible{opacity:1;}
     #analiseModal {
-      background:var(--surface);border-radius:16px;
+      background:var(--surface);
       box-shadow:0 24px 80px rgba(0,0,0,0.28);
-      width:min(1100px,calc(100vw - 24px));
-      max-height:92vh;display:flex;flex-direction:column;
-      transform:translateY(24px) scale(0.97);
+      width:100vw;height:100vh;max-height:100vh;
+      display:flex;flex-direction:column;
+      transform:translateY(18px) scale(0.99);
       transition:transform 0.28s cubic-bezier(0.34,1.4,0.64,1),opacity 0.22s;
-      opacity:0;overflow:hidden;
+      opacity:0;overflow:hidden;border-radius:0;
     }
     #analiseBackdrop.visible #analiseModal{transform:translateY(0) scale(1);opacity:1;}
     /* Modal header */
     #analiseModal .am-head {
-      display:flex;align-items:center;gap:10px;
-      padding:14px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
+      display:flex;align-items:flex-start;gap:12px;
+      padding:16px 20px 12px;border-bottom:1px solid var(--line);flex-shrink:0;
+      position:sticky;top:0;background:var(--surface);z-index:8;
     }
     #analiseModal .am-head-icon {
       width:34px;height:34px;border-radius:9px;flex-shrink:0;
@@ -567,9 +568,9 @@
     #analiseModal .am-title{font-size:1rem;font-weight:800;color:var(--text);}
     #analiseModal .am-sub{font-size:0.72rem;color:var(--muted);margin-top:1px;}
     /* Tabs */
-    .am-tabs{display:flex;gap:2px;padding:10px 18px 0;border-bottom:1px solid var(--line);flex-shrink:0;}
+    .am-tabs{display:flex;gap:6px;padding:10px 20px 0;border-bottom:1px solid var(--line);flex-shrink:0;position:sticky;top:63px;background:var(--surface);z-index:7;overflow:auto;}
     .am-tab{
-      padding:7px 16px;font-size:0.78rem;font-weight:700;border-radius:8px 8px 0 0;
+      padding:10px 16px;font-size:0.82rem;font-weight:800;border-radius:12px 12px 0 0;
       border:1.5px solid transparent;border-bottom:none;cursor:pointer;
       color:var(--muted);background:transparent;transition:all 0.15s;
       position:relative;top:1px;
@@ -585,8 +586,8 @@
     /* Search bar — collapsible */
     .am-search-bar{
       display:flex;align-items:center;gap:10px;
-      padding:10px 18px;border-bottom:1px solid var(--line);flex-shrink:0;
-      flex-wrap:wrap;transition:padding 0.2s;
+      padding:14px 20px;border-bottom:1px solid var(--line);flex-shrink:0;
+      flex-wrap:wrap;transition:padding 0.2s;position:sticky;top:113px;background:var(--surface);z-index:6;
     }
     .am-search-bar.collapsed .am-autocomplete-wrap,
     .am-search-bar.collapsed .am-cor-row,
@@ -675,16 +676,59 @@
     .am-cor-chip:hover{border-color:var(--primary);color:var(--primary);}
     .am-cor-chip.active{background:var(--primary);border-color:var(--primary);color:#fff;}
     /* Results area */
-    .am-results{flex:1;overflow:auto;padding:0;}
+    .am-results{flex:1;overflow:auto;padding:18px 20px 28px;background:var(--bg);}
+
+    .am-head-main{display:flex;flex-direction:column;gap:4px;min-width:0;}
+    .am-head-topline{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .am-context-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px;}
+    .am-context-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface2);font-size:0.72rem;font-weight:700;color:var(--muted);}
+    .am-layout-grid{display:grid;grid-template-columns:1.3fr 0.9fr;gap:16px;align-items:start;}
+    .am-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-sm);overflow:hidden;}
+    .am-card-body{padding:14px 16px;}
+    .am-card-title{font-size:0.84rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px;}
+    .am-card-sub{font-size:0.72rem;color:var(--muted);margin-top:4px;}
+    .am-inline-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px;}
+    .am-inline-metric{padding:10px 12px;border-radius:12px;background:var(--bg);border:1px solid var(--line);}
+    .am-inline-metric .k{font-size:0.64rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);}
+    .am-inline-metric .v{font-size:1rem;font-weight:800;color:var(--text);margin-top:2px;}
+    .am-priority-list{display:flex;flex-direction:column;gap:10px;}
+    .am-priority-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:12px;border-radius:14px;background:var(--bg);border:1px solid var(--line);}
+    .am-priority-name{font-size:0.82rem;font-weight:800;color:var(--text);}
+    .am-priority-meta{font-size:0.72rem;color:var(--muted);margin-top:4px;line-height:1.4;}
+    .am-score-badge{display:inline-flex;align-items:center;justify-content:center;min-width:56px;height:34px;padding:0 10px;border-radius:12px;background:var(--primary-soft);color:var(--primary);font-weight:900;font-size:0.86rem;}
+    .am-section-stack{display:flex;flex-direction:column;gap:16px;}
+    .am-table-card .am-section-header{padding:14px 16px 10px;background:var(--surface);}
+    .am-table-card .am-table-wrap{padding:0 0 4px;background:var(--surface);}
+    .am-empty-panel{padding:24px;border:1px dashed var(--line);border-radius:16px;background:var(--surface);text-align:center;color:var(--muted);}
+    .am-page-actions{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+    .am-ghost-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--surface);color:var(--muted);font-size:0.75rem;font-weight:800;}
+    .am-ghost-btn:hover{border-color:var(--primary);color:var(--primary);background:var(--primary-soft);}
+    .am-prioridades-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    .am-muted-note{font-size:0.72rem;color:var(--muted);}
+    @media (max-width: 1100px){
+      .am-summary{grid-template-columns:repeat(3,minmax(120px,1fr));}
+      .am-layout-grid,.am-prioridades-grid{grid-template-columns:1fr;}
+    }
+    @media (max-width: 720px){
+      .am-tabs{top:72px;padding:8px 12px 0;}
+      .am-search-bar{top:118px;padding:12px;}
+      #analiseModal .am-head{padding:12px;}
+      .am-summary{grid-template-columns:repeat(2,minmax(120px,1fr));padding:12px;}
+      .am-results{padding:12px 12px 22px;}
+      .am-inline-metrics{grid-template-columns:1fr;}
+      .am-page-actions{width:100%;margin-left:0;}
+      .am-autocomplete-wrap{max-width:none;width:100%;}
+    }
     /* Summary strip */
     .am-summary{
-      display:flex;gap:10px;padding:10px 18px;
-      background:var(--bg);border-bottom:1px solid var(--line);flex-shrink:0;flex-wrap:wrap;
+      display:grid;grid-template-columns:repeat(6,minmax(120px,1fr));gap:12px;padding:14px 20px;
+      background:var(--bg);border-bottom:1px solid var(--line);flex-shrink:0;
     }
     .am-stat{
-      background:var(--surface);border:1px solid var(--line);border-radius:8px;
-      padding:8px 14px;display:flex;flex-direction:column;gap:2px;min-width:120px;
+      background:var(--surface);border:1px solid var(--line);border-radius:14px;
+      padding:12px 14px;display:flex;flex-direction:column;gap:4px;min-width:0;
       transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s;cursor:pointer;
+      box-shadow:var(--shadow-sm);
     }
     .am-stat:hover{transform:translateY(-2px);box-shadow:0 4px 14px rgba(40,54,212,0.12);border-color:var(--primary);}
     .am-stat.active{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 4px 14px rgba(40,54,212,0.18);}
@@ -817,7 +861,7 @@
 
   <div id="searchWrap">
     <span class="search-icon">⌕</span>
-    <input id="globalSearch" type="text" placeholder="Buscar cliente, referência, GCI, cor..." />
+    <input id="globalSearch" type="text" placeholder="Buscar cliente, referência, GCI, cor... Ex: DEGRAUS, LNRMLT" />
   </div>
 
   <!-- CORRE quick filter -->
@@ -927,17 +971,27 @@
   <div id="analiseModal" role="dialog" aria-modal="true">
     <div class="am-head">
       <div class="am-head-icon">⚡</div>
-      <div>
-        <div class="am-title">Análise Inteligente de Carteira</div>
-        <div class="am-sub">Cobertura de produto · Risco de cancelamento</div>
+      <div class="am-head-main">
+        <div class="am-head-topline">
+          <div>
+            <div class="am-title">Painel Inteligente de Carteira</div>
+            <div class="am-sub">Cobertura de produto · repasse comercial · risco operacional</div>
+          </div>
+          <div class="am-context-pills" id="amContextPills"></div>
+        </div>
       </div>
-      <button class="tb-btn" id="btnCloseAnalise" title="Fechar" style="margin-left:auto">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
+      <div class="am-page-actions">
+        <button class="am-ghost-btn" id="amRefreshBtn" title="Atualizar análise">↻ Atualizar</button>
+        <button class="tb-btn" id="btnCloseAnalise" title="Fechar">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
     </div>
     <div class="am-tabs">
-      <button class="am-tab active" data-tab="cobertura">🗺️ Cobertura &amp; Repasse</button>
-      <button class="am-tab" data-tab="risco">⚠️ Risco do Mês</button>
+      <button class="am-tab active" data-tab="cobertura">🗺️ Cobertura</button>
+      <button class="am-tab" data-tab="repasse">🚚 Repasse</button>
+      <button class="am-tab" data-tab="risco">⚠️ Risco</button>
+      <button class="am-tab" data-tab="prioridades">🎯 Prioridades</button>
     </div>
     <!-- TAB COBERTURA -->
     <div class="am-panel active" id="am-cobertura">
@@ -974,6 +1028,13 @@
         </div>
       </div>
     </div>
+    <!-- TAB REPASSE -->
+    <div class="am-panel" id="am-repasse">
+      <div class="am-summary" id="amRepasseSummary"></div>
+      <div class="am-results" id="amRepasseResults">
+        <div class="am-empty"><div class="am-empty-icon">🚚</div><p>Selecione uma referência para listar os candidatos mais relevantes ao repasse.</p></div>
+      </div>
+    </div>
     <!-- TAB RISCO -->
     <div class="am-panel" id="am-risco">
       <div class="am-risk-controls" id="amRiskControls">
@@ -982,6 +1043,13 @@
       <div class="am-summary" id="amRiscoSummary"></div>
       <div class="am-results" id="amRiscoResults">
         <div class="am-empty"><div class="am-empty-icon">⏳</div><p>Carregando...</p></div>
+      </div>
+    </div>
+    <!-- TAB PRIORIDADES -->
+    <div class="am-panel" id="am-prioridades">
+      <div class="am-summary" id="amPrioridadesSummary"></div>
+      <div class="am-results" id="amPrioridadesResults">
+        <div class="am-empty"><div class="am-empty-icon">🎯</div><p>Abra a análise para montar suas prioridades do dia.</p></div>
       </div>
     </div>
   </div>
@@ -1317,9 +1385,14 @@ document.addEventListener('click',closeAllDropdowns);
 function applyFilters(){
   let data = [...S.raw];
 
-  // Global search
+  // Global search — aceita múltiplos termos separados por vírgula (regra OU)
   const q = document.getElementById('globalSearch').value.trim().toLowerCase();
-  if(q) data = data.filter(r=>r.__srch.includes(q));
+  if(q){
+    const terms = q.split(',').map(s=>s.trim()).filter(Boolean);
+    if(terms.length){
+      data = data.filter(r=> terms.some(term => r.__srch.includes(term)));
+    }
+  }
 
   // Year filter (topbar select)
   const ySel = document.getElementById('yearSel');
@@ -1421,7 +1494,10 @@ function renderChips(){
   if(!bar) return;
   const chips=[];
   const q=document.getElementById('globalSearch').value.trim();
-  if(q) chips.push({key:'__global__',label:`Busca: ${q}`});
+  if(q){
+    const terms=q.split(',').map(s=>s.trim()).filter(Boolean);
+    chips.push({key:'__global__',label:`Busca: ${terms.join(' • ')}`});
+  }
   const yVal=document.getElementById('yearSel')?.value;
   if(yVal) chips.push({key:'__year__',label:`Ano: ${yVal}`});
   Object.entries(S.colFilters||{}).forEach(([k,v])=>{
@@ -1990,6 +2066,7 @@ function closeAnalise(){
 }
 document.getElementById('btnAnalise')?.addEventListener('click', openAnalise);
 document.getElementById('btnCloseAnalise')?.addEventListener('click', closeAnalise);
+document.getElementById('amRefreshBtn')?.addEventListener('click',()=>{ if(S.raw.length){ amBuildMonthChips(false); amRenderCobertura(); amRenderRepasse(); amBuildRisco(); amBuildPrioridades(); } });
 AMBackdrop.addEventListener('click', e=>{ if(e.target===AMBackdrop) closeAnalise(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape' && AMBackdrop.classList.contains('open')) closeAnalise(); });
 
@@ -2002,6 +2079,9 @@ document.querySelectorAll('.am-tab').forEach(tab=>{
     const id = 'am-'+tab.dataset.tab;
     document.getElementById(id)?.classList.add('active');
     if(tab.dataset.tab==='risco' && S.raw.length){ amBuildMonthChips(false); amBuildRisco(); }
+    if(tab.dataset.tab==='repasse'){ amRenderRepasse(); }
+    if(tab.dataset.tab==='prioridades'){ amBuildPrioridades(); }
+    if(tab.dataset.tab==='cobertura'){ amRenderContextPills({mode:'Cobertura'}); }
   });
 });
 
@@ -2019,6 +2099,10 @@ document.getElementById('amClearBtn')?.addEventListener('click',()=>{
   if(refPill){ refPill.classList.remove('has-ref'); document.getElementById('amRefPillText').textContent='—'; }
   document.getElementById('amSummary').style.display = 'none';
   document.getElementById('amClearBtn').style.display = 'none';
+  document.getElementById('amRepasseSummary').innerHTML='';
+  document.getElementById('amRepasseResults').innerHTML = `<div class="am-empty"><div class="am-empty-icon">🚚</div><p>Selecione uma referência para listar os candidatos mais relevantes ao repasse.</p></div>`;
+  document.getElementById('amPrioridadesSummary').innerHTML='';
+  document.getElementById('amPrioridadesResults').innerHTML = `<div class="am-empty"><div class="am-empty-icon">🎯</div><p>Abra a análise para montar suas prioridades do dia.</p></div>`;
   const pill = document.getElementById('amPeriodPill');
   if(pill){ pill.textContent=''; pill.classList.remove('has-period'); }
   const bar = document.getElementById('amSearchBar');
@@ -2184,6 +2268,168 @@ function amRenderCors(){
   });
 }
 
+
+function amPeriodLabelFromYM(ym){
+  if(!ym) return 'Todos os períodos';
+  const [y,m] = ym.split('-');
+  const ptMonths = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${ptMonths[(+m||1)-1]}/${y}`;
+}
+
+function amScoreOpportunity({cart=0,fat=0,missingProduct=false,risk='neutral'}={}){
+  const gap = Math.max(Number(cart||0) - Number(fat||0), 0);
+  const base = Math.min(60, gap);
+  const miss = missingProduct ? 28 : 0;
+  const riskBoost = risk==='danger' ? 20 : risk==='warn' ? 10 : 0;
+  return Math.round(base + miss + riskBoost);
+}
+
+function amGetCoverageContext(){
+  const periodLabel = amPeriodLabelFromYM(_amMonth);
+  const match = S.raw.filter(r=>{
+    if((r['REFERENCIA']||'').trim() !== _amRef) return false;
+    if(_amCor && (r['COR']||'').trim() !== _amCor) return false;
+    if(_amMonth){
+      const d = asDate(r['PREV FAT']);
+      if(!d) return false;
+      const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+      if(ym !== _amMonth) return false;
+    }
+    return true;
+  });
+
+  const clientsWithProduct = new Set(match.map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean));
+  const monthPool = S.raw.filter(r=>{
+    if(!_amMonth) return true;
+    const d = asDate(r['PREV FAT']);
+    if(!d) return false;
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return ym === _amMonth;
+  });
+
+  const clientMap = new Map();
+  monthPool.forEach(r=>{
+    const client = (r['NOME FANTASIA']||'').trim();
+    if(!client) return;
+    if(!clientMap.has(client)) clientMap.set(client, []);
+    clientMap.get(client).push(r);
+  });
+
+  const candidates = [...clientMap.entries()]
+    .filter(([client, rows]) => !clientsWithProduct.has(client) && rows.length)
+    .map(([client, rows])=>{
+      const cart = rows.reduce((s,r)=>s+(Number(r['CART'])||0),0);
+      const fat = rows.reduce((s,r)=>s+(Number(r['FAT'])||0),0);
+      const bestRisk = rows.some(r=>amRowRisk(r)==='danger') ? 'danger' : rows.some(r=>amRowRisk(r)==='warn') ? 'warn' : 'neutral';
+      const score = amScoreOpportunity({cart, fat, missingProduct:true, risk:bestRisk});
+      return {client, rows, cart, fat, gap:Math.max(cart-fat,0), risk:bestRisk, score, filial:(rows[0]?.['FILIAL']||'').trim()||'—'};
+    })
+    .sort((a,b)=> b.score-a.score || b.cart-a.cart || a.client.localeCompare(b.client,'pt-BR'));
+
+  const totalCart = match.reduce((s,r)=>s+(Number(r['CART'])||0),0);
+  const totalFat  = match.reduce((s,r)=>s+(Number(r['FAT'])||0),0);
+  const atRisk = match.filter(r=>amRowRisk(r)==='danger').length;
+  const atWarn = match.filter(r=>amRowRisk(r)==='warn').length;
+
+  return {match, clientsWithProduct, candidates, totalCart, totalFat, atRisk, atWarn, periodLabel};
+}
+
+function amRenderContextPills(extra={}){
+  const wrap = document.getElementById('amContextPills');
+  if(!wrap) return;
+  const pills = [];
+  pills.push(`<span class="am-context-pill">📦 Ref: <strong>${esc(_amRef || 'não definida')}</strong></span>`);
+  pills.push(`<span class="am-context-pill">🎨 Cor: <strong>${esc(_amCor || 'todas')}</strong></span>`);
+  pills.push(`<span class="am-context-pill">📅 Período: <strong>${esc(_amMonth ? amPeriodLabelFromYM(_amMonth) : 'todos')}</strong></span>`);
+  if(extra.mode) pills.push(`<span class="am-context-pill">🧭 Visão: <strong>${esc(extra.mode)}</strong></span>`);
+  wrap.innerHTML = pills.join('');
+}
+
+function amRenderRepasse(){
+  const summary = document.getElementById('amRepasseSummary');
+  const results = document.getElementById('amRepasseResults');
+  if(!_amRef){
+    summary.innerHTML='';
+    results.innerHTML=`<div class="am-empty-panel">Selecione uma referência na aba Cobertura para montar a lista de repasse.</div>`;
+    amRenderContextPills({mode:'Repasse'});
+    return;
+  }
+  const ctx = amGetCoverageContext();
+  const top = ctx.candidates.slice(0,10);
+  summary.innerHTML = `
+    <div class="am-stat"><div class="am-stat-label">Clientes candidatos</div><div class="am-stat-val">${ctx.candidates.length}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Gap potencial</div><div class="am-stat-val warn">${fmtNum(ctx.candidates.reduce((s,x)=>s+x.gap,0))}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Maior score</div><div class="am-stat-val" style="color:var(--primary)">${top[0]?.score || 0}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Período</div><div class="am-stat-val">${esc(ctx.periodLabel)}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Com produto</div><div class="am-stat-val ok">${ctx.clientsWithProduct.size}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Sem produto</div><div class="am-stat-val danger">${ctx.candidates.length}</div></div>`;
+  if(!ctx.candidates.length){
+    results.innerHTML=`<div class="am-empty-panel">Nenhum candidato ao repasse encontrado para os filtros atuais.</div>`;
+    amRenderContextPills({mode:'Repasse'});
+    return;
+  }
+  const rows = ctx.candidates.map(c=>`<tr>
+    <td><strong>${esc(c.client)}</strong></td>
+    <td>${esc(c.filial)}</td>
+    <td style="text-align:right;font-weight:700">${fmtNum(c.cart)}</td>
+    <td style="text-align:right">${fmtNum(c.fat)}</td>
+    <td style="text-align:right;color:var(--warn);font-weight:800">${fmtNum(c.gap)}</td>
+    <td>${c.risk==='danger' ? '<span class="status-pill danger">Crítico</span>' : c.risk==='warn' ? '<span class="status-pill warn">Atenção</span>' : '<span class="status-pill ok">Estável</span>'}</td>
+    <td><span class="am-score-badge">${c.score}</span></td>
+  </tr>`).join('');
+  results.innerHTML = `
+    <div class="am-layout-grid">
+      <div class="am-card am-table-card">
+        <div class="am-section-header">Ranking de candidatos<span class="am-section-badge">${ctx.candidates.length} clientes</span></div>
+        <div class="am-table-wrap"><table class="am-table"><thead><tr><th>Cliente</th><th>Filial</th><th style="text-align:right">Carteira</th><th style="text-align:right">Faturado</th><th style="text-align:right">Gap</th><th>Risco</th><th>Score</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </div>
+      <div class="am-section-stack">
+        <div class="am-card"><div class="am-card-body"><div class="am-card-title">🎯 Top 5 para agir agora</div><div class="am-card-sub">Prioridade calculada por gap de carteira, ausência do produto e criticidade de status.</div><div class="am-priority-list" style="margin-top:12px">${top.slice(0,5).map(c=>`<div class="am-priority-item"><div><div class="am-priority-name">${esc(c.client)}</div><div class="am-priority-meta">Filial ${esc(c.filial)} · Gap ${fmtNum(c.gap)} · ${ctx.periodLabel}</div></div><div class="am-score-badge">${c.score}</div></div>`).join('')}</div></div></div>
+        <div class="am-card"><div class="am-card-body"><div class="am-card-title">🧠 Recomendação</div><div class="am-card-sub">Comece pelos clientes com maior score e gap. Eles combinam oportunidade comercial com menor cobertura do produto analisado.</div></div></div>
+      </div>
+    </div>`;
+  amRenderContextPills({mode:'Repasse'});
+}
+
+function amBuildPrioridades(){
+  const summary = document.getElementById('amPrioridadesSummary');
+  const results = document.getElementById('amPrioridadesResults');
+  const riskyBase = S.raw.filter(r=>{
+    const risk = amRowRisk(r);
+    if(risk==='neutral') return false;
+    if(!_amMonth) return true;
+    const d = asDate(r['PREV FAT']);
+    if(!d) return false;
+    const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    return ym===_amMonth;
+  }).map(r=>({
+    client:(r['NOME FANTASIA']||'').trim()||'—',
+    filial:(r['FILIAL']||'').trim()||'—',
+    referencia:(r['REFERENCIA']||'').trim()||'—',
+    cart:Number(r['CART']||0),
+    fat:Number(r['FAT']||0),
+    risk:amRowRisk(r),
+    status:[r['STATUS 1'],r['STATUS 2'],r['STATUS 3']].filter(Boolean).join(' · '),
+    score:amScoreOpportunity({cart:Number(r['CART']||0), fat:Number(r['FAT']||0), missingProduct:false, risk:amRowRisk(r)})
+  })).sort((a,b)=>b.score-a.score || b.cart-a.cart).slice(0,10);
+
+  const repasse = _amRef ? amGetCoverageContext().candidates.slice(0,10) : [];
+  summary.innerHTML = `
+    <div class="am-stat"><div class="am-stat-label">Top repasse</div><div class="am-stat-val">${repasse.length}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Top risco</div><div class="am-stat-val danger">${riskyBase.length}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Referência foco</div><div class="am-stat-val">${esc(_amRef || '—')}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Período</div><div class="am-stat-val">${esc(_amMonth ? amPeriodLabelFromYM(_amMonth) : 'todos')}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Maior score repasse</div><div class="am-stat-val" style="color:var(--primary)">${repasse[0]?.score || 0}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Maior score risco</div><div class="am-stat-val warn">${riskyBase[0]?.score || 0}</div></div>`;
+
+  results.innerHTML = `
+    <div class="am-prioridades-grid">
+      <div class="am-card"><div class="am-section-header">Prioridades de repasse<span class="am-section-badge">${repasse.length} itens</span></div><div class="am-card-body">${repasse.length ? `<div class="am-priority-list">${repasse.map(c=>`<div class="am-priority-item"><div><div class="am-priority-name">${esc(c.client)}</div><div class="am-priority-meta">Filial ${esc(c.filial)} · Gap ${fmtNum(c.gap)} · Carteira ${fmtNum(c.cart)}</div></div><div class="am-score-badge">${c.score}</div></div>`).join('')}</div>` : '<div class="am-muted-note">Selecione uma referência para montar o ranking de repasse.</div>'}</div></div>
+      <div class="am-card"><div class="am-section-header">Prioridades de risco<span class="am-section-badge">${riskyBase.length} itens</span></div><div class="am-card-body">${riskyBase.length ? `<div class="am-priority-list">${riskyBase.map(c=>`<div class="am-priority-item"><div><div class="am-priority-name">${esc(c.client)}</div><div class="am-priority-meta">${esc(c.referencia)} · ${esc(c.status || 'Sem status')} · Gap ${fmtNum(Math.max(c.cart-c.fat,0))}</div></div><div class="am-score-badge">${c.score}</div></div>`).join('')}</div>` : '<div class="am-muted-note">Nenhum item prioritário encontrado.</div>'}</div></div>
+    </div>`;
+  amRenderContextPills({mode:'Prioridades'});
+}
+
 // Status helpers
 const RISK_STATUSES   = new Set(['URGENTE','ATRASADO','CANCELAR']);
 const WARN_STATUSES   = new Set(['AGUARDAR','PENDENTE','CONFIRMAR','PEND 04/02']);
@@ -2207,77 +2453,29 @@ function amStatusBadges(row){
 function amRenderCobertura(){
   const summary  = document.getElementById('amSummary');
   const results  = document.getElementById('amResults');
-  if(!_amRef){ results.innerHTML=`<div class="am-empty"><div class="am-empty-icon">🔎</div><p>Digite uma referência acima.</p></div>`; summary.style.display='none'; return; }
-
-  // rows that match ref + optional cor + optional month
-  const match = S.raw.filter(r=>{
-    if((r['REFERENCIA']||'').trim() !== _amRef) return false;
-    if(_amCor && (r['COR']||'').trim() !== _amCor) return false;
-    if(_amMonth){
-      const d = asDate(r['PREV FAT']);
-      if(!d) return false;
-      const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-      if(ym !== _amMonth) return false;
-    }
-    return true;
-  });
-
-  // Group by client
-  const clientMap = {};
-  match.forEach(r=>{
-    const nome = (r['NOME FANTASIA']||'—').trim();
-    if(!clientMap[nome]) clientMap[nome] = {nome, rows:[]};
-    clientMap[nome].rows.push(r);
-  });
-
-  // Clients who have this product (in the selected month/all)
-  const clientsWithProduct = new Set(Object.keys(clientMap));
-
-  // For candidates: clients who DON'T have this ref in the same period
-  // When month is active: we look for clients who have ANY order in that month but not this ref
-  let candidates;
-  if(_amMonth){
-    // All clients with any PREV FAT in the selected month
-    const clientsInMonth = new Set(
-      S.raw.filter(r=>{
-        const d = asDate(r['PREV FAT']);
-        if(!d) return false;
-        const ym = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-        return ym === _amMonth;
-      }).map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean)
-    );
-    // Candidates = in that month but don't have THIS product
-    candidates = [...clientsInMonth].filter(c=> !clientsWithProduct.has(c));
-  } else {
-    const allClients = [...new Set(S.raw.map(r=>(r['NOME FANTASIA']||'').trim()).filter(Boolean))];
-    candidates = allClients.filter(c=> !clientsWithProduct.has(c));
+  if(!_amRef){
+    summary.style.display='none';
+    results.innerHTML = `<div class="am-empty"><div class="am-empty-icon">🔎</div><p>Digite uma referência para ver quem tem esse produto na carteira e identificar candidatos ao repasse.</p></div>`;
+    amRenderContextPills({mode:'Cobertura'});
+    amRenderRepasse();
+    amBuildPrioridades();
+    return;
   }
 
-  // Period label for display
-  const ptMonths = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  const periodLabel = _amMonth ? (()=>{ const [y,m]=_amMonth.split('-'); return `${ptMonths[+m-1]}/${y}`; })() : 'Todos os meses';
+  const ctx = amGetCoverageContext();
+  const {match, clientsWithProduct, candidates, totalCart, totalFat, atRisk, atWarn, periodLabel} = ctx;
+  const gapTotal = Math.max(totalCart-totalFat,0);
+  const coveragePct = (clientsWithProduct.size + candidates.length) ? Math.round((clientsWithProduct.size / (clientsWithProduct.size + candidates.length)) * 100) : 0;
 
-  // Stats
-  const totalCart = match.reduce((s,r)=> s+(Number(r['CART'])||0), 0);
-  const totalFat  = match.reduce((s,r)=> s+(Number(r['FAT'])||0), 0);
-  const atRisk    = match.filter(r=> amRowRisk(r)==='danger').length;
-  const atWarn    = match.filter(r=> amRowRisk(r)==='warn').length;
-
-  summary.style.display='flex';
+  summary.style.display='grid';
   summary.innerHTML = `
-    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Clientes com produto</div><div class="am-stat-val">${clientsWithProduct.size}</div></div>
-    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Registros ${_amMonth?`· ${periodLabel}`:''}</div><div class="am-stat-val">${match.length}</div></div>
-    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Carteira total</div><div class="am-stat-val">${fmtNum(totalCart)} pares</div></div>
-    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Faturado</div><div class="am-stat-val ok">${fmtNum(totalFat)}</div></div>
-    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Em risco</div><div class="am-stat-val danger">${atRisk} reg.</div></div>
-    <div class="am-stat" data-kpi="all"><div class="am-stat-label">Em alerta</div><div class="am-stat-val warn">${atWarn} reg.</div></div>
-    <div class="am-stat ${_amShowCandidatesOnly?'active':''}" data-kpi="candidates" title="Clique para ver apenas candidatos ao repasse" style="cursor:pointer;border-style:dashed">
-      <div class="am-stat-label">${_amMonth ? `Candidatos em ${periodLabel} 👆` : 'Candidatos repasse 👆'}</div>
-      <div class="am-stat-val" style="color:var(--primary)">${candidates.length}</div>
-    </div>
-  `;
+    <div class="am-stat"><div class="am-stat-label">Clientes com produto</div><div class="am-stat-val ok">${clientsWithProduct.size}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Clientes sem produto</div><div class="am-stat-val danger">${candidates.length}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Cobertura</div><div class="am-stat-val">${coveragePct}%</div></div>
+    <div class="am-stat"><div class="am-stat-label">Carteira total</div><div class="am-stat-val">${fmtNum(totalCart)}</div></div>
+    <div class="am-stat"><div class="am-stat-label">Gap carteira</div><div class="am-stat-val warn">${fmtNum(gapTotal)}</div></div>
+    <div class="am-stat ${_amShowCandidatesOnly?'active':''}" data-kpi="candidates"><div class="am-stat-label">Candidatos ao repasse</div><div class="am-stat-val" style="color:var(--primary)">${candidates.length}</div></div>`;
 
-  // Wire KPI clicks
   summary.querySelectorAll('.am-stat').forEach(el=>{
     el.addEventListener('click',()=>{
       if(el.dataset.kpi==='candidates'){
@@ -2287,41 +2485,12 @@ function amRenderCobertura(){
     });
   });
 
-  const tableHead = `<thead><tr>
-    <th style="width:36px"></th>
-    <th>Cliente</th><th>Filial</th><th>Referência</th><th>Cor</th>
-    <th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th>
-  </tr></thead>`;
-
-  // If showing candidates only
-  if(_amShowCandidatesOnly){
-    if(!candidates.length){
-      results.innerHTML=`<div class="am-empty"><div class="am-empty-icon">✅</div><p>Todos os clientes já possuem esse produto na carteira.</p></div>`;
-      return;
-    }
-    const candidateRows = candidates.map(c=> `<tr>
-      <td></td>
-      <td><strong>${esc(c)}</strong></td>
-      <td colspan="5" style="color:var(--muted);font-style:italic">Não possui esse produto — candidato ao repasse</td>
-      <td></td>
-    </tr>`).join('');
-    results.innerHTML = `
-      <div class="am-section-header">
-        ${_amMonth ? `Candidatos em <strong>${periodLabel}</strong>` : 'Candidatos ao repasse'}
-        <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes${_amMonth?' com pedidos neste mês':''}</span>
-        <button onclick="_amShowCandidatesOnly=false;amRenderCobertura()" style="margin-left:auto;font-size:0.68rem;font-weight:700;color:var(--primary);background:none;border:none;cursor:pointer;padding:0 4px">← Ver todos</button>
-      </div>
-      <div class="am-table-wrap">
-        <table class="am-table">${tableHead}<tbody>${candidateRows}</tbody></table>
-      </div>`;
-    return;
-  }
-
-  // Normal view — both sections
   const riskOrder = {danger:0,warn:1,neutral:2,ok:3};
-  const sortedRows = [...match].sort((a,b)=> riskOrder[amRowRisk(a)] - riskOrder[amRowRisk(b)]);
+  const sortedRows = [...match].sort((a,b)=> riskOrder[amRowRisk(a)] - riskOrder[amRowRisk(b)] || Number(b['CART']||0)-Number(a['CART']||0));
+  const topCandidates = candidates.slice(0,5);
+  const topRiskRows = sortedRows.filter(r=>['danger','warn'].includes(amRowRisk(r))).slice(0,5);
 
-  const coverRows = sortedRows.map(r=>{
+  const productRows = sortedRows.map(r=>{
     const risk = amRowRisk(r);
     const rClass = risk==='danger' ? 'am-risk-row' : '';
     const imgSrc = r.__img || '';
@@ -2332,38 +2501,67 @@ function amRenderCobertura(){
       <td style="text-align:center">${imgBtn}</td>
       <td><strong>${esc((r['NOME FANTASIA']||'—').trim())}</strong></td>
       <td>${esc(r['FILIAL']||'—')}</td>
-      <td style="color:var(--primary);font-weight:700">${esc(r['REFERENCIA']||'—')}</td>
       <td>${esc(r['COR']||'—')}</td>
       <td style="text-align:right;font-weight:700">${fmtNum(r['CART']||0)}</td>
       <td>${amStatusBadges(r)||'<span style="color:var(--muted)">—</span>'}</td>
-      <td style="color:var(--muted);font-size:0.72rem">${esc(fmtDate(r['PREV FAT']))}</td>
+      <td style="color:var(--muted)">${esc(fmtDate(r['PREV FAT']))}</td>
     </tr>`;
   }).join('');
 
-  const candidateRows = candidates.slice(0,60).map(c=> `<tr>
-    <td></td>
-    <td><strong>${esc(c)}</strong></td>
-    <td colspan="5" style="color:var(--muted);font-style:italic">Não possui esse produto — candidato ao repasse</td>
-    <td></td>
+  const candidateRows = candidates.map(c=> `<tr>
+    <td><strong>${esc(c.client)}</strong></td>
+    <td>${esc(c.filial)}</td>
+    <td style="text-align:right;font-weight:700">${fmtNum(c.cart)}</td>
+    <td style="text-align:right">${fmtNum(c.fat)}</td>
+    <td style="text-align:right;color:var(--warn);font-weight:800">${fmtNum(c.gap)}</td>
+    <td>${c.risk==='danger' ? '<span class="status-pill danger">Crítico</span>' : c.risk==='warn' ? '<span class="status-pill warn">Atenção</span>' : '<span class="status-pill ok">Estável</span>'}</td>
+    <td><span class="am-score-badge">${c.score}</span></td>
   </tr>`).join('');
 
+  if(_amShowCandidatesOnly){
+    results.innerHTML = candidates.length ? `
+      <div class="am-card am-table-card">
+        <div class="am-section-header">Candidatos ao repasse<span class="am-section-badge">${candidates.length} clientes · ${periodLabel}</span><button onclick="_amShowCandidatesOnly=false;amRenderCobertura()" style="margin-left:auto;font-size:0.72rem;font-weight:800;color:var(--primary);background:none;border:none;cursor:pointer">← Ver painel completo</button></div>
+        <div class="am-table-wrap"><table class="am-table"><thead><tr><th>Cliente</th><th>Filial</th><th style="text-align:right">Carteira</th><th style="text-align:right">Faturado</th><th style="text-align:right">Gap</th><th>Risco</th><th>Score</th></tr></thead><tbody>${candidateRows}</tbody></table></div>
+      </div>` : `<div class="am-empty-panel">Todos os clientes já possuem esse produto na carteira para os filtros atuais.</div>`;
+    amRenderContextPills({mode:'Cobertura'});
+    amRenderRepasse();
+    amBuildPrioridades();
+    return;
+  }
+
   results.innerHTML = `
-    <div class="am-section-header">
-      Clientes com o produto${_amMonth?` <span style="color:var(--ok);font-weight:700">· ${periodLabel}</span>`:''}
-      <span class="am-section-badge">${clientsWithProduct.size} clientes · ${match.length} registros</span>
-    </div>
-    <div class="am-table-wrap">
-      <table class="am-table">${tableHead}<tbody>${coverRows}</tbody></table>
-    </div>
-    ${candidates.length ? `
-    <div class="am-section-header" style="margin-top:8px">
-      ${_amMonth ? `Candidatos ao repasse em <strong>${periodLabel}</strong>` : 'Candidatos ao repasse'}
-      <span class="am-section-badge" style="background:rgba(14,162,113,0.12);color:var(--ok)">${candidates.length} clientes${_amMonth?' com pedidos neste mês, sem esse produto':' sem esse produto'}</span>
-    </div>
-    <div class="am-table-wrap">
-      <table class="am-table">${tableHead}<tbody>${candidateRows}</tbody></table>
-    </div>` : ''}
-  `;
+    <div class="am-layout-grid">
+      <div class="am-section-stack">
+        <div class="am-card">
+          <div class="am-card-body">
+            <div class="am-card-title">📌 Resumo executivo</div>
+            <div class="am-card-sub">Leitura rápida da cobertura da referência no período selecionado.</div>
+            <div class="am-inline-metrics">
+              <div class="am-inline-metric"><div class="k">Período</div><div class="v">${esc(periodLabel)}</div></div>
+              <div class="am-inline-metric"><div class="k">Em risco</div><div class="v" style="color:var(--danger)">${atRisk}</div></div>
+              <div class="am-inline-metric"><div class="k">Em alerta</div><div class="v" style="color:var(--warn)">${atWarn}</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="am-card am-table-card">
+          <div class="am-section-header">Clientes com o produto<span class="am-section-badge">${clientsWithProduct.size} clientes · ${match.length} registros</span></div>
+          <div class="am-table-wrap"><table class="am-table"><thead><tr><th style="width:36px"></th><th>Cliente</th><th>Filial</th><th>Cor</th><th style="text-align:right">Carteira</th><th>Status</th><th>Prev.Fat</th></tr></thead><tbody>${productRows || '<tr><td colspan="7" style="padding:16px;color:var(--muted)">Nenhum registro para os filtros atuais.</td></tr>'}</tbody></table></div>
+        </div>
+        <div class="am-card am-table-card">
+          <div class="am-section-header">Clientes sem o produto<span class="am-section-badge">${candidates.length} oportunidades</span></div>
+          <div class="am-table-wrap"><table class="am-table"><thead><tr><th>Cliente</th><th>Filial</th><th style="text-align:right">Carteira</th><th style="text-align:right">Faturado</th><th style="text-align:right">Gap</th><th>Risco</th><th>Score</th></tr></thead><tbody>${candidateRows || '<tr><td colspan="7" style="padding:16px;color:var(--muted)">Nenhum candidato ao repasse.</td></tr>'}</tbody></table></div>
+        </div>
+      </div>
+      <div class="am-section-stack">
+        <div class="am-card"><div class="am-card-body"><div class="am-card-title">🚀 Prioridades do dia</div><div class="am-card-sub">Clientes com maior potencial imediato para repasse desta referência.</div><div class="am-priority-list" style="margin-top:12px">${topCandidates.length ? topCandidates.map(c=>`<div class="am-priority-item"><div><div class="am-priority-name">${esc(c.client)}</div><div class="am-priority-meta">Filial ${esc(c.filial)} · Gap ${fmtNum(c.gap)} · Carteira ${fmtNum(c.cart)}</div></div><div class="am-score-badge">${c.score}</div></div>`).join('') : '<div class="am-muted-note">Nenhum candidato ao repasse para os filtros atuais.</div>'}</div></div></div>
+        <div class="am-card"><div class="am-card-body"><div class="am-card-title">⚠️ Clientes sob atenção</div><div class="am-card-sub">Linhas com maior risco dentro da própria referência analisada.</div><div class="am-priority-list" style="margin-top:12px">${topRiskRows.length ? topRiskRows.map(r=>`<div class="am-priority-item"><div><div class="am-priority-name">${esc((r['NOME FANTASIA']||'—').trim())}</div><div class="am-priority-meta">${esc(r['FILIAL']||'—')} · ${esc((r['COR']||'—'))} · ${esc(fmtDate(r['PREV FAT']))}</div></div><div class="am-score-badge">${amScoreOpportunity({cart:Number(r['CART']||0), fat:Number(r['FAT']||0), missingProduct:false, risk:amRowRisk(r)})}</div></div>`).join('') : '<div class="am-muted-note">Sem clientes críticos para esta referência.</div>'}</div></div></div>
+      </div>
+    </div>`;
+
+  amRenderContextPills({mode:'Cobertura'});
+  amRenderRepasse();
+  amBuildPrioridades();
 }
 
 // ── TAB 2: RISCO DO MÊS ──────────────────────────────────────────
@@ -2412,6 +2610,7 @@ function amBuildRisco(){
   });
 
   amRenderRisco(risky);
+  amRenderContextPills({mode:'Risco'});
 }
 
 function amRenderRisco(risky){
